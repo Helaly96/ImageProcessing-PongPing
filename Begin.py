@@ -10,6 +10,7 @@ cropping = False
 current_pos=(0,0)
 end_drawing=False
 
+eye_dropper_bool=False
 #the mouse call back event , i binded it to the very first frame
 #basically i want the user to click 4 points, that will be the 
 #ROI of interest
@@ -36,6 +37,15 @@ def Crop_Image(event,x,y,flags,param):
 
 		# draw a rectangle around the region of interest
 
+circles_to_be_drawn=[]
+
+def eye_dropper(event,x,y,flags,param):
+    global eye_dropper
+    if event == cv2.EVENT_LBUTTONDOWN:
+        circles_to_be_drawn.append((x,y))
+        print("Value of clicked position is")
+        print(frame[x,y])
+        eye_dropper_bool = False
     
 #define a window
 cv2.namedWindow('Original_First_Frame')
@@ -79,7 +89,7 @@ cap.release()
 #read from video
 cap = cv2.VideoCapture('Testing-pingpong.mp4')
 
-h_lower=100
+h_lower=60
 h_higher=255
 
 s_lower=0
@@ -88,51 +98,67 @@ s_higher=100
 v_lower=120
 v_higher=255
 
+#define a window
+cv2.namedWindow('Original_HSV')
+#the window the mouse events binded to that windows
+cv2.setMouseCallback('Original_HSV',eye_dropper)
+
+
 #while loop to go through the video obviously
 while(1):
     #read video frame
-    ret, frame = cap.read()
+        ret, frame = cap.read()
+        
+        #crop the selected frame
+        yframe = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 
-    #crop the selected frame
-    frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+        #rpg to hsv wow
+        yframe = cv2.cvtColor(yframe, cv2.COLOR_BGR2HSV)
 
-    #rpg to hsv wow
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        for i in range(len(circles_to_be_drawn)):
+            cv2.circle(frame,circles_to_be_drawn[i],10,(255,0,0),-1)
 
 
-    #TODO
-    #Segmenation Ball
-    #white thresholds
-    lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
-    upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
+        #TODO
+        #Segmenation Ball
+        #white thresholds
+        lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
+        upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
 
-    # Threshold the HSV image to get only white colors
-    mask = cv2.inRange(frame, lower_white, upper_white)
-    
-    # Bitwise-AND mask and original image
-    frame = cv2.bitwise_and(frame,frame, mask= mask)
+        # Threshold the HSV image to get only white colors
+        mask = cv2.inRange(yframe, lower_white, upper_white)
 
-    #apply motion tracking
-    fgmask = fgbg.apply(frame)
+        # Bitwise-AND mask and original image
+        xframe = cv2.bitwise_and(yframe,yframe, mask= mask)
 
-    #TODO
-    #needs better HSV values for white
-    cv2.imshow('Result of white masking!',mask)
+        #apply motion tracking
+        fgmask = fgbg.apply(xframe)
 
-    #Result of HSV + Motion Detection
-    cv2.imshow('Result_of_HSV_Motion_Detection',fgmask)
-    k = cv2.waitKey(30) & 0xff
-    if k == 27:
-        break
-    elif k==ord('h'):
-        h_lower=int(input("Enter Lower Hue's Value \n"))
-        h_higher=int(input("Enter Upper Hue's Value \n"))
-    elif k==ord('v'):
-        v_lower=int(input("Enter Lower Value's Value \n"))
-        v_higher=int(input("Enter Lower Value's Value \n"))
-    elif k==ord('s'):
-        s_lower=int(input("Enter Lower Saturation's Value \n"))
-        s_higher=int(input("Enter Lower Saturation's Value \n"))
+        #TODO
+        #needs better HSV values for white
+        cv2.imshow('Result of white masking!',mask)
+
+        #Result of HSV + Motion Detection
+        cv2.imshow('Result_of_HSV_Motion_Detection',fgmask)
+
+        #original_HSV
+        cv2.imshow("Original_HSV",frame)
+
+        k = cv2.waitKey(30) & 0xff
+        if k == 27:
+            break
+        elif k==ord('h'):
+            h_lower=int(input("Enter Lower Hue's Value \n"))
+            h_higher=int(input("Enter Upper Hue's Value \n"))
+        elif k==ord('v'):
+            v_lower=int(input("Enter Lower Value's Value \n"))
+            v_higher=int(input("Enter Lower Value's Value \n"))
+        elif k==ord('s'):
+            s_lower=int(input("Enter Lower Saturation's Value \n"))
+            s_higher=int(input("Enter Lower Saturation's Value \n"))
+        elif k==ord('p'):
+            x=input()
+
 
         
     
