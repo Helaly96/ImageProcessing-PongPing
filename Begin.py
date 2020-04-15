@@ -57,6 +57,7 @@ cap = cv2.VideoCapture('Testing-pingpong.mp4')
 
 #moving subtract Filter
 fgbg = cv2.createBackgroundSubtractorMOG2()
+KNN = cv2.createBackgroundSubtractorKNN()
 
 #read first frame of video
 ret,frame = cap.read()
@@ -89,11 +90,11 @@ cap.release()
 #read from video
 cap = cv2.VideoCapture('Testing-pingpong.mp4')
 
-h_lower=60
-h_higher=255
+h_lower=0
+h_higher=180
 
 s_lower=0
-s_higher=100
+s_higher=255
 
 v_lower=120
 v_higher=255
@@ -102,6 +103,7 @@ v_higher=255
 cv2.namedWindow('Original_HSV')
 #the window the mouse events binded to that windows
 cv2.setMouseCallback('Original_HSV',eye_dropper)
+
 
 
 #while loop to go through the video obviously
@@ -125,6 +127,9 @@ while(1):
         lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
         upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
 
+        #Opening Process
+        structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+
         # Threshold the HSV image to get only white colors
         mask = cv2.inRange(yframe, lower_white, upper_white)
 
@@ -132,17 +137,29 @@ while(1):
         xframe = cv2.bitwise_and(yframe,yframe, mask= mask)
 
         #apply motion tracking
+        fgbg.setDetectShadows(False)
+        fgbg.setVarMin(500)
+        fgbg.setVarMax(2500)
         fgmask = fgbg.apply(xframe)
+
+        #opened Frame
+        openedFrame = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, structuringElement)
 
         #TODO
         #needs better HSV values for white
         cv2.imshow('Result of white masking!',mask)
 
-        #Result of HSV + Motion Detection
-        cv2.imshow('Result_of_HSV_Motion_Detection',fgmask)
+        #Result of HSV + Motion Detection + MOG2
+        cv2.imshow('Result_of_HSV_Motion_Detection MOG2',fgmask)
 
         #original_HSV
         cv2.imshow("Original_HSV",frame)
+
+        #opened Frame
+        cv2.imshow("Opened",openedFrame)
+         
+
+
 
         k = cv2.waitKey(30) & 0xff
         if k == 27:
