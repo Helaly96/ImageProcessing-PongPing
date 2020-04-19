@@ -223,6 +223,9 @@ for i in range(len(saved_frame)):
     cv2.drawContours(image_to_be_displayed, [Right_Half],-1, (255, 255,255), 3)
     cv2.drawContours(image_to_be_displayed, [Left_Half], -1, (255, 0, 0), 3)
 
+    #cv2.fillPoly(image_to_be_displayed, pts=[Right_Half], color=(255, 255, 255))
+    #cv2.fillPoly(image_to_be_displayed, pts=[Left_Half], color=(255, 255, 255))
+
 
     pts,image_to_be_displayed = Bounding_Box_Of_Stadium(Right_Half,image_to_be_displayed)
     pts, image_to_be_displayed = Bounding_Box_Of_Stadium(Left_Half, image_to_be_displayed)

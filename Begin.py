@@ -90,11 +90,11 @@ cap.release()
 #read from video
 cap = cv2.VideoCapture('Testing-pingpong.mp4')
 
-h_lower=0
+h_lower=100
 h_higher=180
 
 s_lower=0
-s_higher=255
+s_higher=100
 
 v_lower=120
 v_higher=255
