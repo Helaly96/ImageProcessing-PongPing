@@ -46,7 +46,10 @@ def eye_dropper(event,x,y,flags,param):
         print("Value of clicked position is")
         print(frame[x,y])
         eye_dropper_bool = False
-    
+
+def Optical_flow(frame):
+    return 1
+
 #define a window
 cv2.namedWindow('Original_First_Frame')
 #the window the mouse events binded to that windows
@@ -124,44 +127,47 @@ while(1):
         #TODO
         #Segmenation Ball
         #white thresholds
-        lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
-        upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
+        #lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
+        #upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
 
         #Opening Process
-        structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        #structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
         # Threshold the HSV image to get only white colors
-        mask = cv2.inRange(yframe, lower_white, upper_white)
+        #mask = cv2.inRange(yframe, lower_white, upper_white)
 
         # Bitwise-AND mask and original image
-        xframe = cv2.bitwise_and(yframe,yframe, mask= mask)
+        #xframe = cv2.bitwise_and(yframe,yframe, mask= mask)
 
         #apply motion tracking
         fgbg.setDetectShadows(False)
         fgbg.setVarMin(500)
         fgbg.setVarMax(2500)
-        fgmask = fgbg.apply(xframe)
+        fgmask = fgbg.apply(yframe)
 
         #opened Frame
-        openedFrame = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, structuringElement)
+        #openedFrame = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, structuringElement)
 
         #TODO
         #needs better HSV values for white
-        cv2.imshow('Result of white masking!',mask)
+        #cv2.imshow('Result of white masking!',mask)
 
         #Result of HSV + Motion Detection + MOG2
-        cv2.imshow('Result_of_HSV_Motion_Detection MOG2',fgmask)
+        #cv2.imshow('Result_of_HSV_Motion_Detection MOG2',fgmask)
 
         #original_HSV
-        cv2.imshow("Original_HSV",frame)
+        #cv2.imshow("Original_HSV",frame)
 
         #opened Frame
-        cv2.imshow("Opened",openedFrame)
+        xframe = cv2.cvtColor(cv2.bitwise_and(yframe,yframe, mask= fgmask),cv2.COLOR_HSV2BGR)
+        cv2.imshow("Opened",xframe)
+
+
          
 
 
 
-        k = cv2.waitKey(30) & 0xff
+        k = cv2.waitKey(50) & 0xff
         if k == 27:
             break
         elif k==ord('h'):

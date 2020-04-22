@@ -19,10 +19,10 @@ def nothing(x):
 
 class Ui_MainWindow(object):
 
-    h_lower = 0
+    h_lower = 109
     h_higher = 180
 
-    s_lower = 0
+    s_lower = 24
     s_higher = 255
 
     v_lower = 120
