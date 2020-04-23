@@ -61,7 +61,7 @@ cv2.namedWindow('Original_First_Frame')
 cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 
 #read from video
-cap = cv2.VideoCapture('Testing-pingpong.mp4')
+cap = cv2.VideoCapture('private-record.mp4')
 
 #read first frame of video
 ret,frame = cap.read()
@@ -96,10 +96,10 @@ cap.release()
 #Parameters for the difference
 sensitivityValue1 = 50
 sensitivityValue2 = 80
-blurSize = (9,9)
+blurSize = (7,7)
 
 #read from video
-cap = cv2.VideoCapture('Testing-pingpong.mp4')
+cap = cv2.VideoCapture('private-record.mp4')
 _, frame = cap.read()
 frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 #frame = colorSegment(frame)
@@ -122,7 +122,7 @@ while(1):
     #Contour Detection
     #Contour Parameters
     perimeterMin = 10
-    perimeterMax = 40
+    perimeterMax = 200
     epsilon = 0.03
     numberOfAcceptedContours = 4
 
@@ -141,7 +141,7 @@ while(1):
             if(k):
                 real_cnts.append((cnt))
     
-    cv2.drawContours(frame, real_cnts, -1, (0, 255, 0), 2)
+    cv2.drawContours(frame, real_cnts, -1, (0, 0, 255), 3)
 
     '''
     #Apply Hough Circle
@@ -167,9 +167,9 @@ while(1):
 
     #Window Showing
 
-    cv2.imshow('Difference Image',differenceImage)
-    cv2.imshow('Threshold Image',thresholdImage)
-    cv2.imshow('Final Threshold Image', finalThresholdImage)
+    #cv2.imshow('Difference Image',differenceImage)
+    #cv2.imshow('Threshold Image',thresholdImage)
+    #cv2.imshow('Final Threshold Image', finalThresholdImage)
     cv2.imshow('Contour Detected', frame)
 
 
