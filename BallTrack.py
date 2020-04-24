@@ -67,10 +67,10 @@ cap = cv2.VideoCapture('Edmonton.mp4')
 ret,frame = cap.read()
 
 #write the first frame
-cv2.imwrite("x.jpg",frame)
+cv2.imwrite("Testing_Ball_HSV/x.jpg", frame)
 
 #read it
-clone = cv2.imread("x.jpg")
+clone = cv2.imread("Testing_Ball_HSV/x.jpg")
 
 #keep showing the image, so we can draw on it hehe.
 while(1):

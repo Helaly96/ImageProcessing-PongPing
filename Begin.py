@@ -4,6 +4,10 @@ import cv2
 #to hold image of rect
 points=[]
 
+
+
+body_cascade = cv2.CascadeClassifier('haarcascade_fullbody.xml')
+
 cropping = False
 
 #current mouse position
@@ -56,7 +60,7 @@ cv2.namedWindow('Original_First_Frame')
 cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 
 #read from video
-cap = cv2.VideoCapture('Testing-pingpong.mp4')
+cap = cv2.VideoCapture('private-record.mp4')
 
 #moving subtract Filter
 fgbg = cv2.createBackgroundSubtractorMOG2()
@@ -66,10 +70,10 @@ KNN = cv2.createBackgroundSubtractorKNN()
 ret,frame = cap.read()
 
 #write the first frame
-cv2.imwrite("x.jpg",frame)
+cv2.imwrite("Testing_Ball_HSV/x.jpg", frame)
 
 #read it
-clone = cv2.imread("x.jpg")
+clone = cv2.imread("Testing_Ball_HSV/x.jpg")
 
 
 
@@ -91,15 +95,22 @@ cap.release()
 
 
 #read from video
-cap = cv2.VideoCapture('Testing-pingpong.mp4')
+cap = cv2.VideoCapture('private-record.mp4')
 
-h_lower=100
-h_higher=180
+h_l_lower=0
+h_l_higher=100
 
-s_lower=0
-s_higher=100
 
-v_lower=120
+h_r_lower=80
+h_r_higher=150
+
+s_l_lower=0
+s_l_higher=60
+
+s_r_lower=90
+s_r_higher=200
+
+v_lower=0
 v_higher=255
 
 #define a window
@@ -107,13 +118,15 @@ cv2.namedWindow('Original_HSV')
 #the window the mouse events binded to that windows
 cv2.setMouseCallback('Original_HSV',eye_dropper)
 
-
-
+_,prev = cap.read()
+prev = prev[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+prev=cv2.cvtColor(prev,cv2.COLOR_BGR2GRAY)
+#print(_)
 #while loop to go through the video obviously
 while(1):
     #read video frame
         ret, frame = cap.read()
-        
+
         #crop the selected frame
         yframe = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 
@@ -127,26 +140,33 @@ while(1):
         #TODO
         #Segmenation Ball
         #white thresholds
-        #lower_white = np.array([h_lower,s_lower,v_lower], dtype=np.uint8)
-        #upper_white = np.array([h_higher,s_higher,v_higher], dtype=np.uint8)
+        lower_white = np.array([h_l_lower,s_l_lower,v_lower], dtype=np.uint8)
+        upper_white = np.array([h_l_higher,s_l_higher,v_higher], dtype=np.uint8)
+        lower_white_ = np.array([h_r_lower, s_r_lower, v_lower], dtype=np.uint8)
+        upper_white_ = np.array([h_r_higher,s_r_higher,v_higher], dtype=np.uint8)
+
+
 
         #Opening Process
-        #structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
 
         # Threshold the HSV image to get only white colors
-        #mask = cv2.inRange(yframe, lower_white, upper_white)
+        mask = cv2.inRange(yframe, lower_white, upper_white)
+        mask2 = cv2.inRange(yframe,lower_white_,upper_white_)
 
+        oring = mask | mask2
         # Bitwise-AND mask and original image
-        #xframe = cv2.bitwise_and(yframe,yframe, mask= mask)
+        xframe = cv2.bitwise_and(yframe,yframe)
+
+        cv2.imshow("Colored White",xframe)
 
         #apply motion tracking
-        fgbg.setDetectShadows(False)
-        fgbg.setVarMin(500)
-        fgbg.setVarMax(2500)
+        fgbg.setDetectShadows(True)
+        fgbg.setVarMin(10)
+        #fgbg.setVarMax(10)
         fgmask = fgbg.apply(yframe)
 
         #opened Frame
-        #openedFrame = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, structuringElement)
 
         #TODO
         #needs better HSV values for white
@@ -159,15 +179,80 @@ while(1):
         #cv2.imshow("Original_HSV",frame)
 
         #opened Frame
-        xframe = cv2.cvtColor(cv2.bitwise_and(yframe,yframe, mask= fgmask),cv2.COLOR_HSV2BGR)
-        cv2.imshow("Opened",xframe)
+        #xframe = cv2.cvtColor(cv2.bitwise_and(xframe,xframe, mask= fgmask),cv2.COLOR_HSV2BGR)
+        _, finalThresholdImage = cv2.threshold(fgmask, 240, 255, cv2.THRESH_BINARY)
+        xframe = cv2.cvtColor(cv2.bitwise_and(yframe,yframe, mask= finalThresholdImage),cv2.COLOR_HSV2BGR)
+        xframe = cv2.cvtColor(xframe, cv2.COLOR_BGR2GRAY)
+        #xframe = cv2.erode(xframe, (100, 100))
+        #xframe = cv2.medianBlur(xframe, 15)
+        _, xframe = cv2.threshold(xframe, 60, 255, cv2.THRESH_BINARY)
+
+#print(xframe.shape)
+
+        abs_diff=cv2.absdiff(xframe,prev)
+
+        #cv2.imshow("FF",abs_diff)
+    # Contour Detection
+    # Contour Parameters
+        perimeterMin = 10
+        perimeterMax = 10000
+        epsilon = 0.03
+        numberOfAcceptedContours = 4
+
+        # Blank frame to draw the contour on
+        blankFrame = np.zeros(frame.shape)
 
 
-         
+        cv2.imshow("int",abs_diff)
+        openedFrame = cv2.morphologyEx(abs_diff, cv2.MORPH_CLOSE, structuringElement)
+
+        contours, hierarchy = cv2.findContours(abs_diff, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        #contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+        blankFrame2 = np.zeros(yframe.shape)
 
 
 
-        k = cv2.waitKey(50) & 0xff
+
+        real_cnts = []
+
+        #bodies = body_cascade.detectMultiScale(frame, 1.3, 5)
+        #print(bodies)
+        #for (x, y, w, h) in bodies:
+                #yframe = cv2.rectangle(yframe, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+
+        #cv2.imshow("SS",cv2.cvtColor(frame,cv2.COLOR_HSV2BGR))
+        for cnt in contours:
+            cnt = cv2.convexHull(cnt)
+            approx = cv2.approxPolyDP(cnt, epsilon * cv2.arcLength(cnt, True), True)
+            perimeter = cv2.arcLength(cnt, True)
+            if perimeter > 10:
+                k = cv2.isContourConvex(approx)
+                if (k):
+                    real_cnts.append((cnt))
+
+        #print(real_cnts)
+
+        for cont in real_cnts:
+                cv2.fillPoly(blankFrame2, pts=[cont], color=(0, 255, 255))
+
+        cv2.imshow("Red", blankFrame2)
+
+        #cv2.drawContours(yframe, real_cnts, -1, (0, 255, 255), 3)
+
+        #print(real_cnts)
+
+
+        cv2.imshow("cnts",yframe)
+
+
+
+
+
+        prev = xframe
+        k = cv2.waitKey(20) & 0xff
         if k == 27:
             break
         elif k==ord('h'):
