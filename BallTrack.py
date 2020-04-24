@@ -47,7 +47,7 @@ def Crop_Image(event,x,y,flags,param):
 
 def colorSegment(frame):
     lower = np.array([80,0,0])
-    upper = np.array([124,120,255])
+    upper = np.array([120,100,255])
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower, upper)
     res = cv2.bitwise_and(frame,frame, mask = mask)
@@ -61,7 +61,7 @@ cv2.namedWindow('Original_First_Frame')
 cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 
 #read from video
-cap = cv2.VideoCapture('private-record.mp4')
+cap = cv2.VideoCapture('Edmonton.mp4')
 
 #read first frame of video
 ret,frame = cap.read()
@@ -94,12 +94,12 @@ cap.release()
 
 
 #Parameters for the difference
-sensitivityValue1 = 50
+sensitivityValue1 = 80
 sensitivityValue2 = 80
-blurSize = (7,7)
+blurSize = (9,9)
 
 #read from video
-cap = cv2.VideoCapture('private-record.mp4')
+cap = cv2.VideoCapture('Edmonton.mp4')
 _, frame = cap.read()
 frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 #frame = colorSegment(frame)
@@ -115,14 +115,19 @@ while(1):
     _, thresholdImage = cv2.threshold(differenceImage, sensitivityValue1, 255, cv2.THRESH_BINARY)
 	
     #Blurring the Image to get rid of noise
-    finalThresholdImage = cv2.blur(thresholdImage, blurSize)
+    finalThresholdImage = cv2.GaussianBlur(thresholdImage, blurSize,cv2.BORDER_DEFAULT)
     _, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
+
+    #Opening
+    structuringElementSize = (10,10)
+    structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, structuringElementSize)
+    finalThresholdImage = cv2.morphologyEx(finalThresholdImage, cv2.MORPH_OPEN, structuringElement)
     
 
     #Contour Detection
     #Contour Parameters
-    perimeterMin = 10
-    perimeterMax = 200
+    perimeterMin = 40
+    perimeterMax = 100
     epsilon = 0.03
     numberOfAcceptedContours = 4
 
