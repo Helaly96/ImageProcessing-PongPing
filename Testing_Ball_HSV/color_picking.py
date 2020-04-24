@@ -14,7 +14,7 @@ def cvt_hsv(image):
 cv2.namedWindow('pick')
 #the window the mouse events binded to that windows
 cv2.setMouseCallback('pick',color_pick)
-image = cv2.imread("ball.png")
+image = cv2.imread("x2.png")
 
 while(1):
     frame = image

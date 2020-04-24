@@ -67,10 +67,10 @@ cap = cv2.VideoCapture('private-record.mp4')
 ret,frame = cap.read()
 
 #write the first frame
-cv2.imwrite("x.jpg",frame)
+cv2.imwrite("Testing_Ball_HSV/x.jpg", frame)
 
 #read it
-clone = cv2.imread("x.jpg")
+clone = cv2.imread("Testing_Ball_HSV/x.jpg")
 
 #keep showing the image, so we can draw on it hehe.
 while(1):
@@ -117,12 +117,13 @@ while(1):
     #Blurring the Image to get rid of noise
     finalThresholdImage = cv2.blur(thresholdImage, blurSize)
     _, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
-    
+
+    cv2.imshow("S",finalThresholdImage)
 
     #Contour Detection
     #Contour Parameters
     perimeterMin = 10
-    perimeterMax = 200
+    perimeterMax = 10000
     epsilon = 0.03
     numberOfAcceptedContours = 4
 

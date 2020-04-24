@@ -166,10 +166,10 @@ cv2.namedWindow('Original_First_Frame')
 cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 
 #read from video
-cap = cv2.VideoCapture('Testing-pingpong.mp4')
+cap = cv2.VideoCapture('private-record.mp4')
 
 #read it
-clone = cv2.imread("x.jpg")
+clone = cv2.imread("Testing_Ball_HSV/x.jpg")
 #keep showing the image, so we can draw on it hehe.
 while(1):
     frame = clone.copy()
