@@ -1,39 +1,21 @@
-#Score Tracker
-leftScore = 0
-rightScore = 0
+#Get the boundary values from the stadium segmentation code
 
-#Which player is holding the serve:
-#True: left player
-#False: right player
-playerServe = True 
+#Points for testing
+boundaryFirstPlayer = [(-0.5,1),(-0.5,-1),(-1,-1),(-1,1)]
+boundarySecondPlayer = [(0.5,1),(0.5,-1),(1,-1),(1,1)]
+boundaryNet = [(-0.5,0.5),(0.5,0.5),(0.5,-0.5),(-0.5,-0.5)]
 
-#Flags
-#Ball State
-hitTable = 0
-inTheAir = 1
-foul = 2
-#Serve State
-firstServe = True
-let = True
+#Construct the match
+Match m
+m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
+m.startMatch()
 
-#First Hit in Serve
-while firstServe == True :
-    if hitObject(leftTable, ballPosition) == hitTable :
-        if hitObject(ballPosition, rightTable) == hitTable :
-            break
-    elif hitObject(ballPosition, leftTable) == inTheAir :
-        continue
-    else :
-        if let == True :
-            triggerFoul("Let")
-            let == False
-            continue
-        else :
-            triggerFoul("Foul")
-            rightScore += 1
+while(eof(Video.mp4)):
+    #Get Ball coordinate from the ballTrack code
+    #point for testing
+    ballCoord = (0,0)
+    m.updateGame(ballCoord)
 
-
-while not firstServe :
 
 
 

@@ -8,32 +8,35 @@ class Player:
     firstHit = True
     servesPlayedCounter = 0
 
-    def addPoint():
+    def addPoint(self):
         self.score += 1
 
-    def takeServe():
+    def takeServe(self):
         #Resets the attributes each time this player starts a serve
         self.let = True
         self.firstHit = True
         self.servesPlayedCounter = 0
 
-    def doneFirstHit():
+    def doneFirstHit(self):
         firstHit = False
     
-    def finishServe():
+    def finishServe(self):
         self.servesPlayedCounter += 1
     
-    def didFinishServes():
-        if servesPlayedCounter == 2:
+    def didFinishServes(self):
+        if self.servesPlayedCounter == 2:
             return True
         else :
             return False
 
-    def foulLet():
+    def foulLet(self):
         self.let = False
     
-    def getLet():
+    def getLet(self):
         return self.let
 
-    def getScore():
+    def getScore(self):
         return self.score
+
+    def isFirstHit(self):
+        return self.firstHit

@@ -28,7 +28,7 @@ class Ball:
     
 
     #Functions
-    def didCollide():
+    def didCollide(self):
         previousDirection = self.directionHistory[-1]
         beforePreviousDirection = self.directionHistory[-2]
 
@@ -43,7 +43,7 @@ class Ball:
             return self.collidedHorizontally
         
 
-    def updateBall(point):
+    def updateBall(point, self):
         #Update the ball position
         self.position = point
         
