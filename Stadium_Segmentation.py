@@ -1,5 +1,5 @@
-import numpy as np
 import cv2
+import numpy as np
 
 
 def Crop_Image(event, x, y, flags, param):
@@ -166,7 +166,7 @@ cv2.namedWindow('Original_First_Frame')
 cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 
 #read from video
-cap = cv2.VideoCapture('private-record.mp4')
+cap = cv2.VideoCapture('Edmonton.mp4')
 
 #read it
 clone = cv2.imread("Testing_Ball_HSV/x.jpg")

@@ -41,8 +41,8 @@ def Crop_Image(event, x, y, flags, param):
     # draw a rectangle around the region of interest
 
 
-def find_length(pt1,pt2):
-    return int(math.sqrt( (pt1[1]-pt2[1])**2 + (pt1[0]-pt2[0])**2 ))
+def find_length(diff_x,diff_y):
+    return math.sqrt( diff_y**2 + diff_x**2 )
 
 # Color Filtering Function
 def contours_center(c):
@@ -59,6 +59,49 @@ def colorSegment(frame):
     mask = cv2.inRange(hsv, lower, upper)
     res = cv2.bitwise_and(frame, frame, mask=mask)
     return res
+
+def find_nearest_contour(point , contours):
+    min = 100000
+    index=0
+    correct_index=0
+
+    #comparing to the center of each contour
+
+    # for c in contours:
+    #     cx,cy = contours_center(c)
+    #     diff_x=cx - point[0]
+    #     diff_y=cy - point[1]
+    #     dist = find_length(diff_x,diff_y)
+    #     if(dist < min):
+    #         min = dist
+    #         correct_index= index
+    #     index+=1
+
+
+    best_fit=()
+    #comparing to each contour point
+    for c in contours:
+        for p in c:
+            x,y = p.ravel()
+            diff_x=x - point[0]
+            diff_y=y - point[1]
+            dist = find_length(diff_x, diff_y)
+            if(dist < min):
+                    min = dist
+                    best_fit=(x,y)
+        index+=1
+
+    print("THE INDEX IS "+str(correct_index)+" :D")
+
+    if(len(contours)==0):
+        return -1, -1
+    else:
+        print("!!!")
+        cv2.circle(frame, best_fit, 30, (190, 170, 255), -1)
+        return best_fit
+
+
+
 
 # define a window
 cv2.namedWindow('Original_First_Frame')
@@ -114,6 +157,7 @@ trajectories=[]
 
 #differences
 differences=[]
+j = 0
 
 while True:
     _, frame = cap.read()
@@ -155,7 +199,8 @@ while True:
     #contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     #we can get only top levels contours
     contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
+    #contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
     real_cnts = []
 
     for cnt in contours:
@@ -183,20 +228,22 @@ while True:
     #cv2.imshow("mini",z)
 
 
-    #for c in all_contours:
-        #hull = cv2.convexHull(c)
-        #cv2.drawContours(contoured, c, 0, (0, 0, 255), thickness=cv2.FILLED)
-        #cv2.drawContours(contours_only, c, 0, (0, 255, 0), thickness=cv2.FILLED)
-        #cv2.drawContours(frame,c, 0, (0, 0, 255), thickness=cv2.FILLED)
+    # for c in all_contours:
+    #     #hull = cv2.convexHull(c)
+    #     cv2.drawContours(contoured, c, 0, (0, 0, 255), thickness=cv2.FILLED)
+    #     cv2.drawContours(contours_only, c, 0, (0, 255, 0), thickness=cv2.FILLED)
+    #     cv2.drawContours(frame,c, -1, (0, 0, 255), thickness=cv2.FILLED)
 
     ''' --------------------/ Trajectory /------------------ '''
 
     ''' The ball will be lagging the actual ball but that's fixable because the point we are drawing 
      is the center of the contour, while the point we are drawing is the first point of the contour
      '''
+
+
+
     #the ball is detected
     if len(contours)>0:
-
         #get center of current contour (whetehr it's a ball or human)
         center_x,center_y = contours_center(contours[0])
         trajectories.append((center_x,center_y))
@@ -204,21 +251,40 @@ while True:
         #just passing some frames
         if len(trajectories)>30:
 
+            diff_x = trajectories[-1][0] - trajectories[-2][0]
+            diff_y = trajectories[-1][1] - trajectories[-2][1]
+            j+=1
             #draw the current (predicted) position
-            cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 10, (255, 0, 0), -1)
+            #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (255, 0, 0), -1)
             #draw the last correct position
-            cv2.circle(frame, (trajectories[-2][0], trajectories[-2][1]), 10, (0, 0, 255), -1)
+            #cv2.circle(frame, (trajectories[-2][0], trajectories[-2][1]), 10, (0, 0, 255), -1)
 
             #find the distance betweeen them
-            dist = find_length( (trajectories[-1][1],trajectories[-1][0]), (trajectories[-2][1],trajectories[-2][0]) )
+            dist = find_length( diff_y , diff_x)
 
             #print
             print("the distance is "+str(dist))
 
             #threshold
-            if dist>330:
+
+            need_update=False
+
+            if dist>350 and j>2:
+                need_update = True
+                #the reading we got is not correct
                 trajectories.pop()
-            cv2.drawContours(frame,all_contours[0], 0, (0, 0, 255), thickness=cv2.FILLED)
+                #we need to search the remaining contours
+                corrected_x,corrected_y=find_nearest_contour(trajectories[-1],contours[1:])
+                if(corrected_x == -1 and corrected_y == -1):
+                    j=j
+                else:
+                    trajectories.append((corrected_x,corrected_y))
+
+                cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 0, 255), -1)
+            else:
+                cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 255, 255), -1)
+
+            #cv2.drawContours(frame,all_contours[0], -1 , (0, 0, 255), thickness=cv2.FILLED)
 
     #ball_only = cv2.bitwise_and(frame, contours_only)
     # Window Showing
