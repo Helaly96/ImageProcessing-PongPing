@@ -32,7 +32,7 @@ lk_params = dict(winSize = (20, 20),
 cv2.namedWindow("Frame")
 cv2.setMouseCallback("Frame", select_point_to_track)
 #video = cv2.VideoCapture("OF.mp4")
-video = cv2.VideoCapture("private-record.mp4")
+video = cv2.VideoCapture("../private-record.mp4")
 _,frame = video.read()
 old_gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 
@@ -58,7 +58,7 @@ while True:
 
 
     cv2.imshow("Frame",frame)
-    k = cv2.waitKey(240)
+    k = cv2.waitKey(120)
     if k==27:
         break
 

@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-
+import math
 ''' -----------------/ The Bounding Box /--------------------'''
 
 
@@ -41,7 +41,16 @@ def Crop_Image(event, x, y, flags, param):
     # draw a rectangle around the region of interest
 
 
+def find_length(pt1,pt2):
+    return int(math.sqrt( (pt1[1]-pt2[1])**2 + (pt1[0]-pt2[0])**2 ))
+
 # Color Filtering Function
+def contours_center(c):
+    if c is not None:
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+    return cX,cY
 
 def colorSegment(frame):
     lower = np.array([80, 0, 0])
@@ -50,7 +59,6 @@ def colorSegment(frame):
     mask = cv2.inRange(hsv, lower, upper)
     res = cv2.bitwise_and(frame, frame, mask=mask)
     return res
-
 
 # define a window
 cv2.namedWindow('Original_First_Frame')
@@ -88,7 +96,7 @@ cap.release()
 ''' --------------------/ Video Processing /------------------ '''
 
 # Parameters for the difference
-sensitivityValue1 = 40
+sensitivityValue1 = 60
 sensitivityValue2 = 75
 blurSize = (15, 15)
 
@@ -100,6 +108,12 @@ frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 previous = grayImage.copy()
 
+
+#holds a record of previous ball positions
+trajectories=[]
+
+#differences
+differences=[]
 
 while True:
     _, frame = cap.read()
@@ -114,69 +128,99 @@ while True:
     _, thresholdImage = cv2.threshold(blur, sensitivityValue1, 255, cv2.THRESH_BINARY)
 
     # Blurring the Image to get rid of noise
-    #finalThresholdImage = cv2.GaussianBlur(thresholdImage, blurSize, cv2.BORDER_DEFAULT)
-    #_, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
+    finalThresholdImage = cv2.GaussianBlur(thresholdImage, blurSize, cv2.BORDER_DEFAULT)
+    _, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
+    cv2.imshow("FFF",finalThresholdImage)
 
     # Opening
-    structuringElementSize = (10, 10)
+    structuringElementSize = (7,7)
     structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, structuringElementSize)
     finalThresholdImage = cv2.morphologyEx(thresholdImage, cv2.MORPH_OPEN, structuringElement)
 
+    finalThresholdImage = cv2.GaussianBlur(finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
+
+    cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame,frame,mask=finalThresholdImage))
     # Contour Detection
     # Contour Parameters
     perimeterMin = 50
-    perimeterMax = 100
+    perimeterMax = 800
     epsilon = 0.03
     numberOfAcceptedContours = 4
 
     # Blank frame to draw the contour on
     blankFrame = np.zeros(frame.shape)
 
-    contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    #instead of getting a tree of contours (ie, each contour contain a child)
+    #contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #we can get only top levels contours
+    contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
     real_cnts = []
 
     for cnt in contours:
-        approx = cv2.approxPolyDP(cnt, epsilon * cv2.arcLength(cnt, True), True)
         perimeter = cv2.arcLength(cnt, True)
-        if len(approx) > 5 and perimeterMin < perimeter < perimeterMax:
+        if perimeterMin < perimeter < perimeterMax:
             #if cv2.isContourConvex(approx):
             if cv2.contourArea(cnt) < 300:
                 real_cnts.append(cnt)
 
-    all_contours.append(real_cnts)
+
+    #comment the following if you want the full history
+    all_contours=[]
+    all_contours.append(contours)
     contours_only = np.zeros(frame.shape)
     contoured = cv2.cvtColor(finalThresholdImage, cv2.COLOR_GRAY2RGB)
 
-    for c in all_contours:
-        cv2.drawContours(contoured, c, -1, (0, 0, 255), thickness=cv2.FILLED)
-        cv2.drawContours(contours_only, c, -1, (0, 0, 255), thickness=cv2.FILLED)
-        cv2.drawContours(frame, c, -1, (0, 0, 255), thickness=cv2.FILLED)
+
+    #getting the center
+
+
+    #testing the filtered contour vs the unfiltered
+    z=frame.copy()
+    for x in real_cnts:
+        cv2.drawContours(z, x, 0, (0, 255, 0), thickness=10)
+    #cv2.imshow("mini",z)
+
+
+    #for c in all_contours:
+        #hull = cv2.convexHull(c)
+        #cv2.drawContours(contoured, c, 0, (0, 0, 255), thickness=cv2.FILLED)
+        #cv2.drawContours(contours_only, c, 0, (0, 255, 0), thickness=cv2.FILLED)
+        #cv2.drawContours(frame,c, 0, (0, 0, 255), thickness=cv2.FILLED)
+
+    ''' --------------------/ Trajectory /------------------ '''
+
+    ''' The ball will be lagging the actual ball but that's fixable because the point we are drawing 
+     is the center of the contour, while the point we are drawing is the first point of the contour
+     '''
+    #the ball is detected
+    if len(contours)>0:
+
+        #get center of current contour (whetehr it's a ball or human)
+        center_x,center_y = contours_center(contours[0])
+        trajectories.append((center_x,center_y))
+
+        #just passing some frames
+        if len(trajectories)>30:
+
+            #draw the current (predicted) position
+            cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 10, (255, 0, 0), -1)
+            #draw the last correct position
+            cv2.circle(frame, (trajectories[-2][0], trajectories[-2][1]), 10, (0, 0, 255), -1)
+
+            #find the distance betweeen them
+            dist = find_length( (trajectories[-1][1],trajectories[-1][0]), (trajectories[-2][1],trajectories[-2][0]) )
+
+            #print
+            print("the distance is "+str(dist))
+
+            #threshold
+            if dist>330:
+                trajectories.pop()
+            cv2.drawContours(frame,all_contours[0], 0, (0, 0, 255), thickness=cv2.FILLED)
 
     #ball_only = cv2.bitwise_and(frame, contours_only)
-
-    '''
-    #Apply Hough Circle
-    #Hough Circle Parameters
-    #dp: This parameter is the inverse ratio of the accumulator resolution to the image resolution (see Yuen et al. for more details). Essentially, the larger the dp gets, the smaller the accumulator array gets.
-    dp = 1.2
-    #minDist: Minimum distance between the center (x, y) coordinates of detected circles. If the minDist is too small, multiple circles in the same neighborhood as the original may be (falsely) detected. If the minDist is too large, then some circles may not be detected at all.
-    minDist = 0
-    if len(real_cnts) > 5 :
-        circles = cv2.HoughCircles(blankFrame, cv2.HOUGH_GRADIENT, dp, minDist)
-
-        # ensure at least some circles were found
-        if circles is not None:
-            # convert the (x, y) coordinates and radius of the circles to integers
-            circles = np.round(circles[0, :]).astype("int")
-            # loop over the (x, y) coordinates and radius of the circles
-            for (x, y, r) in circles:
-                # draw the circle in the output image, then draw a rectangle
-                # corresponding to the center of the circle
-                cv2.circle(frame, (x, y), r, (0, 255, 0), 3)
-                cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-    '''
-
     # Window Showing
 
     #cv2.imshow('Difference Image', differenceImage)
@@ -185,7 +229,7 @@ while True:
     #cv2.imshow('Contour only', contours_only)
     #cv2.imshow('Contours', contoured)
     cv2.imshow('Contour Detected on original', frame)
-
+    #cv2.imshow('Contours only', contours_only )
     previous = grayImage.copy()
 
     k = cv2.waitKey(30) & 0xff
