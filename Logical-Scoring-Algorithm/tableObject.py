@@ -9,12 +9,12 @@ class tableObject:
     #Functions
 
     #Should be called once the region is defined 
-    def createRegion(listOfPoints, self):
+    def createRegion(self, listOfPoints):
         self.boundingPoints = listOfPoints
         self.boundingArea = Polygon(self.boundingPoints)
 
 
-    def inRegion(testedPoint, self):
+    def inRegion(self, testedPoint):
         #Input: tuple indicating coordinates (x,y)
         #Output: Boolean, Is the point in the region?
         

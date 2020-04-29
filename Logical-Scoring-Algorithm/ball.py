@@ -43,7 +43,7 @@ class Ball:
             return self.collidedHorizontally
         
 
-    def updateBall(point, self):
+    def updateBall(self, point):
         #Update the ball position
         self.position = point
         

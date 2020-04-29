@@ -1,3 +1,4 @@
+from match import Match
 #Get the boundary values from the stadium segmentation code
 
 #Points for testing
@@ -6,7 +7,7 @@ boundarySecondPlayer = [(0.5,1),(0.5,-1),(1,-1),(1,1)]
 boundaryNet = [(-0.5,0.5),(0.5,0.5),(0.5,-0.5),(-0.5,-0.5)]
 
 #Construct the match
-Match m
+m = Match()
 m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
 m.startMatch()
 
