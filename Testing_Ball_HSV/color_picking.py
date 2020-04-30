@@ -4,7 +4,12 @@ import cv2
 def color_pick(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDBLCLK:
         print("Value of clicked position is")
+        cv2.circle(frame, (x, y), 10, (255, 0, 0), -1)
+        print("X is "+ str(x))
+        print("Y is "+ str(y))
         print(hsv[y,x])
+
+
 
 def cvt_hsv(image):
     image = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)

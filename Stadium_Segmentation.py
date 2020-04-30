@@ -25,7 +25,7 @@ def Crop_Image(event, x, y, flags, param):
 
 def Stadium_segment(image):
     lower_stadium = np.array([100,80,90], dtype=np.uint8)
-    upper_stadium = np.array([110,110,185], dtype=np.uint8)
+    upper_stadium = np.array([140,130,185], dtype=np.uint8)
     # Threshold the HSV image to get only white colors
     mask = cv2.inRange(image, lower_stadium, upper_stadium)
     # Bitwise-AND mask and original image
@@ -41,6 +41,8 @@ def draw_circles_of_points(c,image_to_be_displayed):
 
 
 def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
+
+    points_corner=[]
 
     font                   = cv2.FONT_HERSHEY_SIMPLEX
     bottomLeftCornerOfText = (10,500)
@@ -81,7 +83,9 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
 
     #first point of hull is lower right?
     cv2.circle(image_to_be_displayed, tuple(c[0][0]), 8, (255, 255, 255), -1)
-    
+
+    points_corner.append(tuple(c[0][0]))
+
     cv2.putText(image_to_be_displayed,'1', 
                 tuple(c[0][0]), 
                 font, 
@@ -100,6 +104,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
             break
         x,y=point.ravel()
         if( (abs(x-prev_point[0])>0.85*widht_of_rectangle) and (not first_time_x)):
+            points_corner.append((x, y))
             count+=1
             first_time_x=True
             cv2.circle(image_to_be_displayed, (x,y), 8, (0, 255, 0), -1)
@@ -113,6 +118,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
                 )
         
         elif(abs(x-prev_point[0]) >0.6*widht_of_rectangle and first_time_x):
+            points_corner.append((x, y))
             count+=1
             cv2.circle(image_to_be_displayed, (x,y), 8, (255, 0, 0), -1)
             prev_point = list((x,y))
@@ -125,6 +131,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
                 )
 
         elif(abs(y-prev_point[1]) >0.4*height_of_rectangle):
+            points_corner.append((x, y))
             count+=1
             cv2.circle(image_to_be_displayed, (x,y), 8, (0, 0, 255), -1)
             prev_point = list((x,y))
@@ -138,7 +145,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
                 
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c,0.04 *peri, True)
-    return len(approx),image_to_be_displayed
+    return points_corner,image_to_be_displayed
 
 
 def cvt_hsv(image):
@@ -246,6 +253,21 @@ for i in range(len(saved_frame)):
 current_area=np.array(current_area)
 index=np.argmax(current_area)
 cv2.imshow("X",saved_frame[index])
+
+image_to_be_displayed=cv2.cvtColor(saved_frame[index],cv2.COLOR_HSV2BGR)
+Grayed=cv2.cvtColor(image_to_be_displayed,cv2.COLOR_BGR2GRAY)
+ret,result = cv2.threshold(Grayed,100,255,cv2.THRESH_BINARY)
+contours, _ = cv2.findContours(result,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+contours = sorted(contours, key=cv2.contourArea, reverse=True)[:4]
+Right_Half = cv2.convexHull(contours[0])
+Left_Half = cv2.convexHull(contours[1])
+
+pts1,image_to_be_displayed = Bounding_Box_Of_Stadium(Right_Half,image_to_be_displayed)
+pts2,image_to_be_displayed = Bounding_Box_Of_Stadium(Left_Half, image_to_be_displayed)
+
+print(pts1)
+print(pts2)
+
 cv2.imshow("Frame with maximum area with contours drawn",displayed_frame[index])
 cv2.waitKey(0)
 
