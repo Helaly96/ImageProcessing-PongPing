@@ -1,6 +1,7 @@
 from ball import Ball
 from player import Player
 from tableObject import tableObject
+
 class Match:
     #Flags
     #Collided with a wall or net
@@ -50,8 +51,10 @@ class Match:
     def startMatch(self):
         (self.players)[self.turn].takeServe()
      
-    def didBallHit(self, point):
-        if ((self.ball).didCollide() == self.collidedVertically) and ((self.tableObjects)[(self.turn + self.waitOpposite) % 2]).inRegion(point):
+    def didBallHit(self):
+        point = (self.ball).previousBall()
+        ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite) % 2]).inRegion(point)
+        if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
             return True
         else :
             return False
@@ -59,14 +62,18 @@ class Match:
     def switchOpposite(self):
         self.waitOpposite = (self.waitOpposite + 1)%2
 
-    def didBallHitOpposite(self, point):
-        if ((self.ball).didCollide() == self.collidedVertically) and ((self.tableObjects)[(self.turn + self.waitOpposite + 1) % 2]).inRegion(point):
+    def didBallHitOpposite(self):
+        point = (self.ball).previousBall()
+        ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite + 1) % 2]).inRegion(point)
+        if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
             return True
         else :
             return False
 
-    def didBallHitNet(self, point):
-        if ((self.ball).didCollide() == self.collidedHorizontally) and ((self.tableObjects)[2]).inRegion(point):
+    def didBallHitNet(self):
+        point = (self.ball).previousBall()
+        ballInRegion = ((self.tableObjects)[2]).inRegion(point)
+        if ((self.ball).didCollide() == self.collidedHorizontally) and ballInRegion:
             return True
         else :
             return False
@@ -78,10 +85,10 @@ class Match:
         oppositePlayer = (self.players)[
             (self.turn + self.waitOpposite + 1) % 2]
         if currentPlayer.isFirstHit():
-            if self.didBallHit(point):
+            if self.didBallHit():
                 currentPlayer.doneFirstHit()
                 return
-            elif self.didBallHitNet(point):
+            elif self.didBallHitNet():
                 oppositePlayer.addPoint()
                 currentPlayer.finishServe()
 
@@ -91,7 +98,7 @@ class Match:
                     currentPlayer.takeServe()
 
                 return
-            elif self.didBallHitOpposite(point):
+            elif self.didBallHitOpposite():
                 oppositePlayer.addPoint()
                 currentPlayer.finishServe()
 
@@ -103,7 +110,7 @@ class Match:
                 return
         else:
 
-            if self.didBallHit(point):
+            if self.didBallHit():
                 oppositePlayer.addPoint()
                 currentPlayer.finishServe()
 
@@ -113,7 +120,7 @@ class Match:
                     currentPlayer.takeServe()
 
                 return
-            elif self.didBallHitNet(point):
+            elif self.didBallHitNet():
                 if currentPlayer.getLet() == True:
                     currentPlayer.foulLet()
                     return
@@ -128,7 +135,7 @@ class Match:
 
                     return
 
-            elif self.didBallHitOpposite(point):
+            elif self.didBallHitOpposite():
                 currentPlayer.foulLet()
                 self.switchOpposite()
                 return

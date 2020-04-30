@@ -58,7 +58,8 @@ class Ball:
         self.directionHistory.append(self.direction)
         self.directionHistory.pop(0)
                  
-
+    def previousBall(self):
+        return self.positionHistory[-2]
 
 
 
