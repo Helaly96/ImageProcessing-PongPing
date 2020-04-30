@@ -43,7 +43,7 @@ class Ball:
             return self.collidedHorizontally
         
 
-    def updateBall(point, self):
+    def updateBall(self, point):
         #Update the ball position
         self.position = point
         
@@ -58,7 +58,8 @@ class Ball:
         self.directionHistory.append(self.direction)
         self.directionHistory.pop(0)
                  
-
+    def previousBall(self):
+        return self.positionHistory[-2]
 
 
 
