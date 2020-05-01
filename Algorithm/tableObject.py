@@ -18,9 +18,12 @@ class tableObject:
         #Input: tuple indicating coordinates (x,y)
         #Output: Boolean, Is the point in the region?
         
-        #Create Point Object
-        point = Point(testedPoint[0], testedPoint[1])
-        return (self.boundingArea).contains(point)
+        #Create ball bounding square
+        ballRadius = 12
+        listOfPoints = [(testedPoint[0] + ballRadius, testedPoint[1]+ ballRadius), (testedPoint[0] - ballRadius, testedPoint[1]+ ballRadius), (testedPoint[0] - ballRadius, testedPoint[1]- ballRadius), (testedPoint[0] + ballRadius, testedPoint[1]- ballRadius) ]
+        ball = Polygon(listOfPoints)
+
+        return (self.boundingArea).intersects(ball)
 
 
         

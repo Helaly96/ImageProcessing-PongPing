@@ -78,9 +78,8 @@ class Match:
 
     def didBallHitNet(self):
         point = (self.ball).previousBall()
-        ballCollided = ((self.ball).didCollide() == self.collidedHorizontally)
         ballInRegion = ((self.tableObjects)[2]).inRegion(point)
-        if (ballCollided) and ballInRegion:
+        if ballInRegion:
             print("Hit the net")
             return True
         else :
@@ -128,20 +127,6 @@ class Match:
                     currentPlayer.takeServe()
 
                 return
-            elif self.didBallHitNet():
-                if currentPlayer.getLet() == True:
-                    currentPlayer.foulLet()
-                    return
-                else:
-                    oppositePlayer.addPoint()
-                    currentPlayer.finishServe()
-
-                    if currentPlayer.didFinishServes():
-                        self.switchTurn()
-                    else:
-                        currentPlayer.takeServe()
-
-                    return
 
             elif self.didBallHitOpposite():
                 currentPlayer.foulLet()
