@@ -1,6 +1,6 @@
-from ball import Ball
-from player import Player
-from tableObject import tableObject
+from .ball import Ball
+from .player import Player
+from .tableObject import tableObject
 
 class Match:
     #Flags
@@ -47,6 +47,7 @@ class Match:
     def switchTurn(self):
         self.turn = (self.turn + 1)%2
         (self.players[self.turn]).takeServe()
+        print("Turn Switched")
 
     def startMatch(self):
         (self.players)[self.turn].takeServe()
@@ -55,17 +56,20 @@ class Match:
         point = (self.ball).previousBall()
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite) % 2]).inRegion(point)
         if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
+            print("Hit Home")
             return True
         else :
             return False
 
     def switchOpposite(self):
+        prints("waiting to hit switched")
         self.waitOpposite = (self.waitOpposite + 1)%2
 
     def didBallHitOpposite(self):
         point = (self.ball).previousBall()
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite + 1) % 2]).inRegion(point)
         if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
+            print("Hit Away")
             return True
         else :
             return False
@@ -74,6 +78,7 @@ class Match:
         point = (self.ball).previousBall()
         ballInRegion = ((self.tableObjects)[2]).inRegion(point)
         if ((self.ball).didCollide() == self.collidedHorizontally) and ballInRegion:
+            print("Hit the net")
             return True
         else :
             return False
@@ -139,3 +144,9 @@ class Match:
                 currentPlayer.foulLet()
                 self.switchOpposite()
                 return
+
+    def printInfo(self):
+        print("Player 0 score:" + str(self.players[0].getScore()) + " Player 1 score:" + str(self.players[1].getScore())  + "\n")
+        print("Player " + str(self.turn) + "turn\n")
+        print("Player " + str(self.waitOpposite) + "hit\n")
+        return

@@ -36,10 +36,13 @@ class Ball:
         #Ax / Bx = Ay / By or Ax By = Bx Ay
         if (previousDirection[0] * beforePreviousDirection[0]) > 0:
             if (previousDirection[1] * beforePreviousDirection[1]) > 0 :
+                print("Ball is in the same direction")
                 return self.didntCollide
             else :
+                print("Ball switched direction vertically")
                 return self.collidedVertically 
         else :
+            print("Ball switched direction horizontally")
             return self.collidedHorizontally
         
 

@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 import math
+from Algorithm.match import Match
+from time import sleep
 ''' -----------------/ The Bounding Box /--------------------'''
 
 
@@ -91,12 +93,12 @@ def find_nearest_contour(point , contours):
                     best_fit=(x,y)
         index+=1
 
-    print("THE INDEX IS "+str(correct_index)+" :D")
+    #print("THE INDEX IS "+str(correct_index)+" :D")
 
     if(len(contours)==0):
         return -1, -1
     else:
-        print("!!!")
+        #print("!!!")
         cv2.circle(frame, best_fit, 30, (190, 170, 255), -1)
         return best_fit
 
@@ -159,7 +161,24 @@ trajectories=[]
 differences=[]
 j = 0
 
+
+'''--------------------Create Match Object-----------------------'''
+
+boundaryFirstPlayer = [(1189, 201), (678, 206), (626, 169), (1002, 162)]
+boundarySecondPlayer = [(591,189),(57,178),(180,153),(559,151)]
+boundaryNet = [(591,189),(678, 206),(626, 150),(559,150)]
+
+#Construct the match
+m = Match()
+m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
+m.startMatch()
+
+
+
 while True:
+    #Processing slowly for debugging
+    sleep(0.5)
+
     _, frame = cap.read()
     if frame is None:
         break
@@ -174,7 +193,7 @@ while True:
     # Blurring the Image to get rid of noise
     finalThresholdImage = cv2.GaussianBlur(thresholdImage, blurSize, cv2.BORDER_DEFAULT)
     _, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
-    cv2.imshow("FFF",finalThresholdImage)
+    #cv2.imshow("FFF",finalThresholdImage)
 
     # Opening
     structuringElementSize = (7,7)
@@ -183,7 +202,7 @@ while True:
 
     finalThresholdImage = cv2.GaussianBlur(finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
 
-    cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame,frame,mask=finalThresholdImage))
+    #cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame,frame,mask=finalThresholdImage))
     # Contour Detection
     # Contour Parameters
     perimeterMin = 50
@@ -251,6 +270,10 @@ while True:
         #just passing some frames
         if len(trajectories)>30:
 
+            #Pass the ball coords 
+            m.updateGame(trajectories[-1])
+            m.printInfo()
+
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
             j+=1
@@ -263,7 +286,7 @@ while True:
             dist = find_length( diff_y , diff_x)
 
             #print
-            print("the distance is "+str(dist))
+            #print("the distance is "+str(dist))
 
             #threshold
 
