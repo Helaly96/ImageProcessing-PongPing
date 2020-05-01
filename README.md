@@ -2,6 +2,17 @@
 PongPing is a table tennis scoring system through image processing the live video of the match, where the system
 will be able to score points to the competitors and flag a foul when applied.
 
+## Requirements 
+some libraries are used
+
+
+```bash
+pip install opencv-python
+pip install numpy
+pip install shapely
+```
+
+
 ## Installation
 Start with cloning PongPing.
 
