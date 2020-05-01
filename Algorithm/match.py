@@ -76,8 +76,7 @@ class Match:
         else :
             return False
 
-    def didBallHitNet(self):
-        point = (self.ball).previousBall()
+    def didBallHitNet(self, point):
         ballInRegion = ((self.tableObjects)[2]).inRegion(point)
         if ballInRegion:
             print("Hit the net")
@@ -95,7 +94,7 @@ class Match:
             if self.didBallHit():
                 currentPlayer.doneFirstHit()
                 return
-            elif self.didBallHitNet():
+            elif self.didBallHitNet(point):
                 oppositePlayer.addPoint()
                 currentPlayer.finishServe()
 
