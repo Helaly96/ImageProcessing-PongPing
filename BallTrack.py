@@ -3,6 +3,7 @@ import cv2
 import math
 from Algorithm.match import Match
 from time import sleep
+
 ''' -----------------/ The Bounding Box /--------------------'''
 
 
@@ -99,12 +100,13 @@ def find_nearest_contour(point , contours):
         return -1, -1
     else:
         #print("!!!")
-        cv2.circle(frame, best_fit, 30, (190, 170, 255), -1)
+        #cv2.circle(frame, best_fit, 30, (190, 170, 255), -1)
         return best_fit
 
 
 
-
+'''
+#Mouse Box
 # define a window
 cv2.namedWindow('Original_First_Frame')
 # the window the mouse events binded to that windows
@@ -125,6 +127,7 @@ clone = cv2.imread("Testing_Ball_HSV/x.jpg")
 all_contours = []
 
 # keep showing the image, so we can draw on it hehe.
+
 while True:
     frame = clone.copy()
     if cropping and current_pos != (0, 0):
@@ -137,9 +140,14 @@ while True:
 # destroy the first frame
 cv2.destroyAllWindows()
 cap.release()
-
+'''
 ''' --------------------/ Video Processing /------------------ '''
-
+#Points
+points =[[0,0],[0,0]]
+points[0][1] = 321
+points[1][1] = 711
+points[0][0] = 329
+points[1][0] = 1559
 # Parameters for the difference
 sensitivityValue1 = 60
 sensitivityValue2 = 75
@@ -148,7 +156,9 @@ blurSize = (15, 15)
 # read from video
 cap = cv2.VideoCapture('Edmonton.mp4')
 _, frame = cap.read()
+
 frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+
 # frame = colorSegment(frame)
 grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 previous = grayImage.copy()
@@ -164,9 +174,18 @@ j = 0
 
 '''--------------------Create Match Object-----------------------'''
 
-boundaryFirstPlayer = [(1189, 201), (678, 206), (626, 169), (1002, 162)]
-boundarySecondPlayer = [(591,189),(57,178),(180,153),(559,151)]
-boundaryNet = [(591,189),(678, 206),(626, 150),(559,150)]
+boundaryFirstPlayer = [(1530 - points[0][1], 670 - points[0][0]), (950 - points[0][1], 675 - points[0][0]), (954 - points[0][1], 620 - points[0][0]), (1310 - points[0][1], 620 - points[0][0])]
+boundarySecondPlayer = [(919 - points[0][1], 678 - points[0][0]), (370 - points[0][1], 647 - points[0][0]), (600 - points[0][1], 610 - points[0][0]), (920 - points[0][1], 620 - points[0][0])]
+boundaryNet = [(921 - points[0][1], 678 - points[0][0]),(921 - points[0][1], 610 - points[0][0]),(954 - points[0][1], 580 - points[0][0]),(947 - points[0][1], 680 - points[0][0])]
+
+pts0 = np.array([[1530, 670],[950, 675],[954, 620],[1310, 620]], np.int32)
+pts1 = np.array([[919, 678],[370, 647],[600, 610],[920, 620]], np.int32)
+pts2 = np.array([[921, 678],[921, 610],[954, 580],[947, 680]], np.int32)
+
+
+pts0 = pts0.reshape((-1,1,2))
+pts1 = pts1.reshape((-1,1,2))
+pts2 = pts2.reshape((-1,1,2))
 
 #Construct the match
 m = Match()
@@ -176,13 +195,15 @@ m.startMatch()
 
 
 while True:
-    #Processing slowly for debugging
-    sleep(0.5)
+
 
     _, frame = cap.read()
     if frame is None:
         break
 
+    cv2.polylines(frame,[pts0],True,(255,255,255))
+    cv2.polylines(frame,[pts1],True,(255,255,255))
+    cv2.polylines(frame,[pts2],True,(0,255,0))
     frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
     # frame = colorSegment(frame)
     grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -268,11 +289,11 @@ while True:
         trajectories.append((center_x,center_y))
 
         #just passing some frames
-        if len(trajectories)>30:
+        if len(trajectories)>15:
 
-            #Pass the ball coords 
-            m.updateGame(trajectories[-1])
-            m.printInfo()
+
+
+
 
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
@@ -292,7 +313,7 @@ while True:
 
             need_update=False
 
-            if dist>350 and j>2:
+            if dist>300 and j>2:
                 need_update = True
                 #the reading we got is not correct
                 trajectories.pop()
@@ -301,13 +322,27 @@ while True:
                 if(corrected_x == -1 and corrected_y == -1):
                     j=j
                 else:
+                    
                     trajectories.append((corrected_x,corrected_y))
 
-                cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 0, 255), -1)
+                    #-------Pass the ball coords------------
+                    m.updateGame(trajectories[-1])
+                    cv2.line(frame,trajectories[-1] ,trajectories[-2],(0,0,255), 5)
+                    cv2.line(frame,trajectories[-2] ,trajectories[-3],(0,255,0), 5)
+                    #m.printInfo()
+                    
+                #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 0, 255), -1)
             else:
-                cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 255, 255), -1)
+                '''-------Pass the ball coords------------''' 
+                m.updateGame(trajectories[-1])
+                cv2.line(frame,trajectories[-1] ,trajectories[-2],(0,0,255), 5)
+                cv2.line(frame,trajectories[-2] ,trajectories[-3],(0,255,0), 5)
+                #m.printInfo()
+                #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 255, 255), -1)
 
             #cv2.drawContours(frame,all_contours[0], -1 , (0, 0, 255), thickness=cv2.FILLED)
+
+
 
     #ball_only = cv2.bitwise_and(frame, contours_only)
     # Window Showing
@@ -317,6 +352,7 @@ while True:
     #cv2.imshow('Final Threshold Image', finalThresholdImage)
     #cv2.imshow('Contour only', contours_only)
     #cv2.imshow('Contours', contoured)
+    
     cv2.imshow('Contour Detected on original', frame)
     #cv2.imshow('Contours only', contours_only )
     previous = grayImage.copy()

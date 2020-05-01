@@ -1,4 +1,5 @@
 from operator import sub
+from random import random
 import math
 
 class Ball:
@@ -35,14 +36,14 @@ class Ball:
         #Condition under which vectors A = (Ax , Ay) and B = (Bx , By) are parallel is given by
         #Ax / Bx = Ay / By or Ax By = Bx Ay
         if (previousDirection[0] * beforePreviousDirection[0]) > 0:
-            if (previousDirection[1] * beforePreviousDirection[1]) > 0 :
-                print("Ball is in the same direction")
+            if (previousDirection[1] * beforePreviousDirection[1]) > 0:
+                #print("Ball is in the same direction")
                 return self.didntCollide
             else :
-                print("Ball switched direction vertically")
+                #print("Ball switched direction vertically" + str(random()))
                 return self.collidedVertically 
         else :
-            print("Ball switched direction horizontally")
+            #print("Ball switched direction horizontally")
             return self.collidedHorizontally
         
 

@@ -54,21 +54,23 @@ class Match:
      
     def didBallHit(self):
         point = (self.ball).previousBall()
+        ballCollided = ((self.ball).didCollide() == self.collidedVertically)
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite) % 2]).inRegion(point)
-        if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
+        if (ballCollided) and ballInRegion:
             print("Hit Home")
             return True
         else :
             return False
 
     def switchOpposite(self):
-        prints("waiting to hit switched")
+        print("waiting to hit switched")
         self.waitOpposite = (self.waitOpposite + 1)%2
 
     def didBallHitOpposite(self):
         point = (self.ball).previousBall()
+        ballCollided = ((self.ball).didCollide() == self.collidedVertically)
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite + 1) % 2]).inRegion(point)
-        if ((self.ball).didCollide() == self.collidedVertically) and ballInRegion:
+        if (ballCollided) and ballInRegion:
             print("Hit Away")
             return True
         else :
@@ -76,8 +78,9 @@ class Match:
 
     def didBallHitNet(self):
         point = (self.ball).previousBall()
+        ballCollided = ((self.ball).didCollide() == self.collidedHorizontally)
         ballInRegion = ((self.tableObjects)[2]).inRegion(point)
-        if ((self.ball).didCollide() == self.collidedHorizontally) and ballInRegion:
+        if (ballCollided) and ballInRegion:
             print("Hit the net")
             return True
         else :
