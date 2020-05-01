@@ -68,19 +68,6 @@ def find_nearest_contour(point , contours):
     index=0
     correct_index=0
 
-    #comparing to the center of each contour
-
-    # for c in contours:
-    #     cx,cy = contours_center(c)
-    #     diff_x=cx - point[0]
-    #     diff_y=cy - point[1]
-    #     dist = find_length(diff_x,diff_y)
-    #     if(dist < min):
-    #         min = dist
-    #         correct_index= index
-    #     index+=1
-
-
     best_fit=()
     #comparing to each contour point
     for c in contours:
@@ -280,57 +267,29 @@ while True:
      is the center of the contour, while the point we are drawing is the first point of the contour
      '''
 
-
-
     #the ball is detected
     if len(contours)>0:
         #get center of current contour (whetehr it's a ball or human)
         center_x,center_y = contours_center(contours[0])
         trajectories.append((center_x,center_y))
-
         #just passing some frames
         if len(trajectories)>15:
-
-
-
-
-
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
-            j+=1
-            #draw the current (predicted) position
-            #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (255, 0, 0), -1)
-            #draw the last correct position
-            #cv2.circle(frame, (trajectories[-2][0], trajectories[-2][1]), 10, (0, 0, 255), -1)
-
             #find the distance betweeen them
             dist = find_length( diff_y , diff_x)
-
-            #print
-            #print("the distance is "+str(dist))
-
-            #threshold
-
-            need_update=False
-
-            if dist>300 and j>2:
-                need_update = True
+            if dist>300:
                 #the reading we got is not correct
                 trajectories.pop()
                 #we need to search the remaining contours
                 corrected_x,corrected_y=find_nearest_contour(trajectories[-1],contours[1:])
-                if(corrected_x == -1 and corrected_y == -1):
-                    j=j
-                else:
-                    
-                    trajectories.append((corrected_x,corrected_y))
+                trajectories.append((corrected_x,corrected_y))
+                #-------Pass the ball coords------------
+                m.updateGame(trajectories[-1])
+                cv2.line(frame,trajectories[-1] ,trajectories[-2],(0,0,255), 5)
+                cv2.line(frame,trajectories[-2] ,trajectories[-3],(0,255,0), 5)
+                #m.printInfo()
 
-                    #-------Pass the ball coords------------
-                    m.updateGame(trajectories[-1])
-                    cv2.line(frame,trajectories[-1] ,trajectories[-2],(0,0,255), 5)
-                    cv2.line(frame,trajectories[-2] ,trajectories[-3],(0,255,0), 5)
-                    #m.printInfo()
-                    
                 #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 0, 255), -1)
             else:
                 '''-------Pass the ball coords------------''' 
