@@ -86,8 +86,16 @@ def find_nearest_contour(point , contours):
     if(len(contours)==0):
         return -1, -1
     else:
-        #print("!!!")
-        #cv2.circle(frame, best_fit, 30, (190, 170, 255), -1)
+        diff_x = best_fit[0] - point[0]
+        diff_y = best_fit[1] - point[1]
+        dist = find_length(diff_x, diff_y)
+        print("the distance between the old point and the new approx is:" + str(int(dist)))
+
+        #the point we predicted is off
+        if(dist>70):
+            x=best_fit[0]+10
+            y=best_fit[1]+10
+            best_fit = (x,y)
         return best_fit
 
 
@@ -244,23 +252,6 @@ while True:
     contours_only = np.zeros(frame.shape)
     contoured = cv2.cvtColor(finalThresholdImage, cv2.COLOR_GRAY2RGB)
 
-
-    #getting the center
-
-
-    #testing the filtered contour vs the unfiltered
-    z=frame.copy()
-    for x in real_cnts:
-        cv2.drawContours(z, x, 0, (0, 255, 0), thickness=10)
-    #cv2.imshow("mini",z)
-
-
-    # for c in all_contours:
-    #     #hull = cv2.convexHull(c)
-    #     cv2.drawContours(contoured, c, 0, (0, 0, 255), thickness=cv2.FILLED)
-    #     cv2.drawContours(contours_only, c, 0, (0, 255, 0), thickness=cv2.FILLED)
-    #     cv2.drawContours(frame,c, -1, (0, 0, 255), thickness=cv2.FILLED)
-
     ''' --------------------/ Trajectory /------------------ '''
 
     ''' The ball will be lagging the actual ball but that's fixable because the point we are drawing 
@@ -278,11 +269,12 @@ while True:
             diff_y = trajectories[-1][1] - trajectories[-2][1]
             #find the distance betweeen them
             dist = find_length( diff_y , diff_x)
-            if dist>300:
+            print("The distance between the ball and the center of new is"+str(int(dist)))
+            if dist>60:
                 #the reading we got is not correct
                 trajectories.pop()
                 #we need to search the remaining contours
-                corrected_x,corrected_y=find_nearest_contour(trajectories[-1],contours[1:])
+                corrected_x,corrected_y=find_nearest_contour(trajectories[-1],contours)
                 trajectories.append((corrected_x,corrected_y))
                 #-------Pass the ball coords------------
                 m.updateGame(trajectories[-1])
@@ -300,17 +292,6 @@ while True:
                 #cv2.circle(frame, (trajectories[-1][0], trajectories[-1][1]), 12, (0, 255, 255), -1)
 
             #cv2.drawContours(frame,all_contours[0], -1 , (0, 0, 255), thickness=cv2.FILLED)
-
-
-
-    #ball_only = cv2.bitwise_and(frame, contours_only)
-    # Window Showing
-
-    #cv2.imshow('Difference Image', differenceImage)
-    #cv2.imshow('Threshold Image', thresholdImage)
-    #cv2.imshow('Final Threshold Image', finalThresholdImage)
-    #cv2.imshow('Contour only', contours_only)
-    #cv2.imshow('Contours', contoured)
     
     cv2.imshow('Contour Detected on original', frame)
     #cv2.imshow('Contours only', contours_only )
