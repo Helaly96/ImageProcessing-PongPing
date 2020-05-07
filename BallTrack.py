@@ -73,6 +73,7 @@ def find_nearest_contour(point, contours, trajectories):
 
     best_fit = ()
     # comparing to each contour point
+    i = 0
     for c in contours:
         for p in c:
             x, y = p.ravel()
@@ -80,28 +81,26 @@ def find_nearest_contour(point, contours, trajectories):
             diff_y = y - point[1]
             dist = find_length(diff_x, diff_y)
             if dist < min:
+                i = index
                 min = dist
                 best_fit = (x, y)
         index += 1
 
-    # print("THE INDEX IS "+str(correct_index)+" :D")
 
-    if len(contours) == 0:
-        return -1, -1
-    else:
-        diff_x = best_fit[0] - point[0]
-        diff_y = best_fit[1] - point[1]
-        dist = find_length(diff_x, diff_y)
-        # print("the distance between the old point and the new approx is:" + str(int(dist)))
-        # return best_fit
-        # the point we predicted is off
-        if dist > 150:
-            pass
-            # predict
-            # last_direction = tuple(map(sub, trajectories[-1], trajectories[-2]))
-            # last_direction = tuple(map(floordiv, last_direction, (2, 2)))
-            # best_fit = tuple(map(add, point, last_direction))
-        return best_fit
+    diff_x = best_fit[0] - point[0]
+    diff_y = best_fit[1] - point[1]
+    dist = find_length(diff_x, diff_y)
+    # print("the distance between the old point and the new approx is:" + str(int(dist)))
+    # return best_fit
+    # the point we predicted is off
+    if dist > 400:
+        print("wrong")
+        return point, contours[i]
+        # predict
+        # last_direction = tuple(map(sub, trajectories[-1], trajectories[-2]))
+        # last_direction = tuple(map(floordiv, last_direction, (2, 2)))
+        # best_fit = tuple(map(add, point, last_direction))
+    return best_fit, contours[i]
 
 
 '''
@@ -157,6 +156,7 @@ cap = cv2.VideoCapture('Edmonton.mp4')
 _, frame = cap.read()
 
 frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
 # frame = colorSegment(frame)
 grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -203,7 +203,7 @@ while True:
     frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
     # frame = colorSegment(frame)
     grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    differenceImage = cv2.absdiff(grayImage, previous)
+    differenceImage = cv2.subtract(grayImage, previous)
     blur = cv2.GaussianBlur(differenceImage, (5, 5), cv2.BORDER_DEFAULT)
     _, thresholdImage = cv2.threshold(blur, sensitivityValue1, 255, cv2.THRESH_BINARY)
 
@@ -219,11 +219,11 @@ while True:
 
     finalThresholdImage = cv2.GaussianBlur(finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
 
-    # cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame,frame,mask=finalThresholdImage))
+    cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame, frame, mask=finalThresholdImage))
     # Contour Detection
     # Contour Parameters
-    perimeterMin = 50
-    perimeterMax = 100
+    perimeterMin = 25
+    perimeterMax = 125
     epsilon = 0.03
     numberOfAcceptedContours = 4
 
@@ -236,6 +236,7 @@ while True:
     contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
     real_cnts = []
 
     for cnt in contours:
@@ -251,13 +252,13 @@ while True:
     contoured = cv2.cvtColor(finalThresholdImage, cv2.COLOR_GRAY2RGB)
 
     if len(contours) >= 1:
-        cv2.drawContours(frame, contours[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
+        cv2.drawContours(contours_only, contours[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
     if len(contours) >= 2:
-        cv2.drawContours(frame, contours[1], -1, (0, 0, 255), thickness=5)     # blue = 2
+        cv2.drawContours(contours_only, contours[1], -1, (0, 0, 255), thickness=5)     # blue = 2
     if len(contours) >= 3:
-        cv2.drawContours(frame, contours[2], -1, (0, 255, 0), thickness=5)     # green = 3
+        cv2.drawContours(contours_only, contours[2], -1, (0, 255, 0), thickness=5)     # green = 3
     if len(contours) >= 4:
-        cv2.drawContours(frame, contours[3], -1, (255, 0, 0), thickness=5)     # red = 4
+        cv2.drawContours(contours_only, contours[3], -1, (255, 0, 0), thickness=5)     # red = 4
 
     ''' --------------------/ Trajectory /------------------ '''
 
@@ -277,13 +278,30 @@ while True:
             # find the distance betweeen them
             dist = find_length(diff_y, diff_x)
             # print("The distance between the ball and the center of new is"+str(int(dist)))
-            if dist > 150:
+            if dist > 60:
                 # the reading we got is not correct
                 trajectories.pop()
                 # we need to search the remaining contours
-                corrected_x, corrected_y = find_nearest_contour(trajectories[-1], contours, trajectories)
-                trajectories.append((corrected_x, corrected_y))
+                corrected_point, best_contour = find_nearest_contour(trajectories[-1], real_cnts, trajectories)
+                trajectories.append(corrected_point)
+                center = contours_center(best_contour)
+                color_at_center = frame2[center[1], center[0]]
+                print(color_at_center)
+                # if color_at_center[1] > 128:
+                #     cv2.drawContours(frame, best_contour, -1, (0, 0, 255), thickness=5)  # red = 1
+                # else:
+                #     cv2.drawContours(frame, best_contour, -1, (0, 255, 255), thickness=5)  # yellow = 1
 
+
+
+            else:
+                center = contours_center(real_cnts[0])
+                color_at_center = frame2[center[1], center[0]]
+                print(color_at_center)
+                # if color_at_center[1] > 128:
+                #     cv2.drawContours(frame, real_cnts[0], -1, (0, 0, 255), thickness=5)  # red = 1
+                # else:
+                #     cv2.drawContours(frame, real_cnts[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
             m.updateGame(trajectories[-1])
             cv2.line(frame, trajectories[-1], trajectories[-2], (0, 0, 255), 5)
             cv2.line(frame, trajectories[-2], trajectories[-3], (0, 255, 0), 5)
@@ -295,8 +313,9 @@ while True:
             best_fit = tuple(map(add, trajectories[-1], last_direction))
             trajectories.append(best_fit)
 
-    cv2.imshow('Contour Detected on original', frame)
+    # cv2.imshow('Contour Detected on original', frame)
     # cv2.imshow('Contours only', contours_only)
+    cv2.imshow('th', differenceImage)
     previous = grayImage.copy()
 
     k = cv2.waitKey(45) & 0xff
