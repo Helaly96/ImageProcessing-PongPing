@@ -3,13 +3,12 @@ import cv2
 import math
 from Algorithm.match import Match
 from operator import sub, add, floordiv
-from time import sleep
 
 ''' -----------------/ The Bounding Box /--------------------'''
 
 # to hold image of rect
 points = []
-
+current_frame = []
 cropping = False
 
 # current mouse position
@@ -65,6 +64,8 @@ def colorSegment(frame):
     res = cv2.bitwise_and(frame, frame, mask=mask)
     return res
 
+def get_perimeter(contour):
+    return cv2.arcLength(contour, True)
 
 def find_nearest_contour(point, contours, trajectories):
     min = 100000
@@ -102,6 +103,9 @@ def find_nearest_contour(point, contours, trajectories):
         # best_fit = tuple(map(add, point, last_direction))
     return best_fit, contours[i]
 
+def seek(pos):
+    global index
+    index = pos
 
 '''
 #Mouse Box
@@ -153,14 +157,19 @@ blurSize = (15, 15)
 
 # read from video
 cap = cv2.VideoCapture('Edmonton.mp4')
-_, frame = cap.read()
 
-frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
-frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+all_frames = []
+index = 1
 
-# frame = colorSegment(frame)
-grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-previous = grayImage.copy()
+for i in range(350):
+    _, f = cap.read()
+    f = f[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+    all_frames.append(f)
+
+previous = cv2.cvtColor(all_frames[0], cv2.COLOR_BGR2GRAY)  # first frame
+
+cv2.namedWindow('Frame')
+cv2.createTrackbar('seek', 'Frame', 0, 350, seek)
 
 # holds a record of previous ball positions
 trajectories = []
@@ -192,15 +201,15 @@ m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
 m.startMatch()
 
 while True:
+    frame = all_frames[index]
 
-    _, frame = cap.read()
     if frame is None:
         break
 
     cv2.polylines(frame, [pts0], True, (255, 255, 255))
     cv2.polylines(frame, [pts1], True, (255, 255, 255))
     cv2.polylines(frame, [pts2], True, (0, 255, 0))
-    frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+    # frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
     # frame = colorSegment(frame)
     grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     differenceImage = cv2.subtract(grayImage, previous)
@@ -219,11 +228,10 @@ while True:
 
     finalThresholdImage = cv2.GaussianBlur(finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
 
-    cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame, frame, mask=finalThresholdImage))
     # Contour Detection
     # Contour Parameters
     perimeterMin = 25
-    perimeterMax = 125
+    perimeterMax = 150
     epsilon = 0.03
     numberOfAcceptedContours = 4
 
@@ -235,7 +243,7 @@ while True:
     # we can get only top levels contours
     contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    contours = sorted(contours, key=get_perimeter, reverse=True)
 
     real_cnts = []
 
@@ -251,14 +259,19 @@ while True:
     contours_only = np.zeros(frame.shape)
     contoured = cv2.cvtColor(finalThresholdImage, cv2.COLOR_GRAY2RGB)
 
-    if len(contours) >= 1:
-        cv2.drawContours(contours_only, contours[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
-    if len(contours) >= 2:
-        cv2.drawContours(contours_only, contours[1], -1, (0, 0, 255), thickness=5)     # blue = 2
-    if len(contours) >= 3:
-        cv2.drawContours(contours_only, contours[2], -1, (0, 255, 0), thickness=5)     # green = 3
-    if len(contours) >= 4:
-        cv2.drawContours(contours_only, contours[3], -1, (255, 0, 0), thickness=5)     # red = 4
+    if len(real_cnts) >= 1:
+        cv2.drawContours(frame, real_cnts[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
+    if len(real_cnts) >= 2:
+        cv2.drawContours(frame, real_cnts[1], -1, (0, 0, 255), thickness=5)     # blue = 2
+    if len(real_cnts) >= 3:
+        cv2.drawContours(frame, real_cnts[2], -1, (0, 255, 0), thickness=5)     # green = 3
+    if len(real_cnts) >= 4:
+        cv2.drawContours(frame, real_cnts[3], -1, (255, 0, 0), thickness=5)     # red = 4
+
+    # for c in contours:
+    #     print(int(cv2.arcLength(c, True)), end=' ')
+
+    # print('\n')
 
     ''' --------------------/ Trajectory /------------------ '''
 
@@ -284,20 +297,13 @@ while True:
                 # we need to search the remaining contours
                 corrected_point, best_contour = find_nearest_contour(trajectories[-1], real_cnts, trajectories)
                 trajectories.append(corrected_point)
-                center = contours_center(best_contour)
-                color_at_center = frame2[center[1], center[0]]
-                print(color_at_center)
                 # if color_at_center[1] > 128:
                 #     cv2.drawContours(frame, best_contour, -1, (0, 0, 255), thickness=5)  # red = 1
                 # else:
                 #     cv2.drawContours(frame, best_contour, -1, (0, 255, 255), thickness=5)  # yellow = 1
 
-
-
             else:
                 center = contours_center(real_cnts[0])
-                color_at_center = frame2[center[1], center[0]]
-                print(color_at_center)
                 # if color_at_center[1] > 128:
                 #     cv2.drawContours(frame, real_cnts[0], -1, (0, 0, 255), thickness=5)  # red = 1
                 # else:
@@ -313,10 +319,13 @@ while True:
             best_fit = tuple(map(add, trajectories[-1], last_direction))
             trajectories.append(best_fit)
 
-    # cv2.imshow('Contour Detected on original', frame)
-    # cv2.imshow('Contours only', contours_only)
-    cv2.imshow('th', differenceImage)
-    previous = grayImage.copy()
+    cv2.imshow('Frame', frame)
+    cv2.imshow('Contours only', differenceImage)
+    # cv2.imshow('th', finalThresholdImage)
+    # cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame, frame, mask=finalThresholdImage))
+
+    # previous = cv2.cvtColor(all_frames[index], cv2.COLOR_BGR2GRAY)
+    previous = grayImage
 
     k = cv2.waitKey(45) & 0xff
     if k == 27:
@@ -332,6 +341,9 @@ while True:
         s_higher = int(input("Enter Lower Saturation's Value \n"))
     elif k == ord('p'):
         x = input()
+
+    index += 1
+    cv2.setTrackbarPos('seek', 'Frame', index)
 
 cap.release()
 cv2.destroyAllWindows()
