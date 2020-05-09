@@ -25,7 +25,7 @@ def Crop_Image(event, x, y, flags, param):
 
 def Stadium_segment(image):
     lower_stadium = np.array([100,80,90], dtype=np.uint8)
-    upper_stadium = np.array([140,130,185], dtype=np.uint8)
+    upper_stadium = np.array([140,150,185], dtype=np.uint8)
     # Threshold the HSV image to get only white colors
     mask = cv2.inRange(image, lower_stadium, upper_stadium)
     # Bitwise-AND mask and original image
