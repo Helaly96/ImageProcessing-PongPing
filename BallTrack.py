@@ -7,9 +7,6 @@ from time import sleep
 
 ''' -----------------/ The Bounding Box /--------------------'''
 
-# to hold image of rect
-points = []
-
 cropping = False
 
 # current mouse position
@@ -57,15 +54,6 @@ def contours_center(c):
     return cX, cY
 
 
-def colorSegment(frame):
-    lower = np.array([80, 0, 0])
-    upper = np.array([120, 100, 255])
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lower, upper)
-    res = cv2.bitwise_and(frame, frame, mask=mask)
-    return res
-
-
 def find_nearest_contour(point, contours, trajectories):
     min = 100000
     index = 0
@@ -86,7 +74,6 @@ def find_nearest_contour(point, contours, trajectories):
                 best_fit = (x, y)
         index += 1
 
-
     diff_x = best_fit[0] - point[0]
     diff_y = best_fit[1] - point[1]
     dist = find_length(diff_x, diff_y)
@@ -103,62 +90,25 @@ def find_nearest_contour(point, contours, trajectories):
     return best_fit, contours[i]
 
 
-'''
-#Mouse Box
-# define a window
-cv2.namedWindow('Original_First_Frame')
-# the window the mouse events binded to that windows
-cv2.setMouseCallback('Original_First_Frame', Crop_Image)
-
-# read from video
-cap = cv2.VideoCapture('Edmonton.mp4')
-
-# read first frame of video
-ret, frame = cap.read()
-
-# write the first frame
-cv2.imwrite("Testing_Ball_HSV/x.jpg", frame)
-
-# read it
-clone = cv2.imread("Testing_Ball_HSV/x.jpg")
-
-all_contours = []
-
-# keep showing the image, so we can draw on it hehe.
-
-while True:
-    frame = clone.copy()
-    if cropping and current_pos != (0, 0):
-        cv2.rectangle(frame, points[0], current_pos, (255, 0, 0), 2)
-    k = cv2.waitKey(20) & 0xFF
-    if end_drawing:
-        break
-    cv2.imshow('Original_First_Frame', frame)
-
-# destroy the first frame
-cv2.destroyAllWindows()
-cap.release()
-'''
 ''' --------------------/ Video Processing /------------------ '''
-# Points
+# Points to crop
 points = [[0, 0], [0, 0]]
 points[0][1] = 321
 points[1][1] = 711
 points[0][0] = 329
 points[1][0] = 1559
+
 # Parameters for the difference
-sensitivityValue1 = 60
-sensitivityValue2 = 75
+sensitivityValue = 60
 blurSize = (15, 15)
 
 # read from video
 cap = cv2.VideoCapture('Edmonton.mp4')
 _, frame = cap.read()
 
+# Crop the frame
 frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
-frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-# frame = colorSegment(frame)
 grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 previous = grayImage.copy()
 
@@ -171,13 +121,20 @@ j = 0
 
 '''--------------------Create Match Object-----------------------'''
 
+# Boundary of the first player's table relative to the cropped image
 boundaryFirstPlayer = [(1530 - points[0][1], 670 - points[0][0]), (950 - points[0][1], 675 - points[0][0]),
                        (954 - points[0][1], 620 - points[0][0]), (1310 - points[0][1], 620 - points[0][0])]
+
+# Boundary of the second player's table relative to the cropped image
 boundarySecondPlayer = [(919 - points[0][1], 678 - points[0][0]), (370 - points[0][1], 647 - points[0][0]),
                         (600 - points[0][1], 610 - points[0][0]), (920 - points[0][1], 620 - points[0][0])]
+
+# Boundary of the net relative to the cropped image
 boundaryNet = [(921 - points[0][1], 678 - points[0][0]), (921 - points[0][1], 610 - points[0][0]),
                (954 - points[0][1], 580 - points[0][0]), (947 - points[0][1], 680 - points[0][0])]
 
+
+# Points of the table and net
 pts0 = np.array([[1530, 670], [950, 675], [954, 620], [1310, 620]], np.int32)
 pts1 = np.array([[919, 678], [370, 647], [600, 610], [920, 620]], np.int32)
 pts2 = np.array([[921, 678], [921, 610], [954, 580], [947, 680]], np.int32)
@@ -192,146 +149,141 @@ m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
 m.startMatch()
 
 while True:
-
+    # Read frame
     _, frame = cap.read()
     if frame is None:
         break
 
+    # Draw boundaries
     cv2.polylines(frame, [pts0], True, (255, 255, 255))
     cv2.polylines(frame, [pts1], True, (255, 255, 255))
     cv2.polylines(frame, [pts2], True, (0, 255, 0))
+
+    # Crop frame
     frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
-    # frame = colorSegment(frame)
+
+    # Convert to grayscale
     grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Calcuate the difference between current and last frame
     differenceImage = cv2.subtract(grayImage, previous)
+
+    # Blur the difference to remove noise
     blur = cv2.GaussianBlur(differenceImage, (5, 5), cv2.BORDER_DEFAULT)
-    _, thresholdImage = cv2.threshold(blur, sensitivityValue1, 255, cv2.THRESH_BINARY)
 
-    # Blurring the Image to get rid of noise
-    finalThresholdImage = cv2.GaussianBlur(thresholdImage, blurSize, cv2.BORDER_DEFAULT)
-    _, finalThresholdImage = cv2.threshold(finalThresholdImage, sensitivityValue2, 255, cv2.THRESH_BINARY)
-    # cv2.imshow("FFF",finalThresholdImage)
+    # Threshold the blured frame
+    _, thresholdImage = cv2.threshold(
+        blur, sensitivityValue1, 255, cv2.THRESH_BINARY)
 
-    # Opening
+    # Openning on the frame
     structuringElementSize = (7, 7)
-    structuringElement = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, structuringElementSize)
-    finalThresholdImage = cv2.morphologyEx(thresholdImage, cv2.MORPH_OPEN, structuringElement)
+    structuringElement = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, structuringElementSize)
+    finalThresholdImage = cv2.morphologyEx(
+        thresholdImage, cv2.MORPH_OPEN, structuringElement)
 
-    finalThresholdImage = cv2.GaussianBlur(finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
+    # Blur the opened frame
+    finalThresholdImage = cv2.GaussianBlur(
+        finalThresholdImage, (5, 5), cv2.BORDER_DEFAULT)
 
-    cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame, frame, mask=finalThresholdImage))
     # Contour Detection
     # Contour Parameters
     perimeterMin = 25
     perimeterMax = 125
     epsilon = 0.03
-    numberOfAcceptedContours = 4
-
-    # Blank frame to draw the contour on
-    blankFrame = np.zeros(frame.shape)
 
     # instead of getting a tree of contours (ie, each contour contain a child)
     # contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # we can get only top levels contours
-    contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = sorted(contours, key=cv2.contourArea, reverse=True)[:numberOfAcceptedContours]
+    contours, hierarchy = cv2.findContours(
+        finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Sort the contours with area
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
+    # Select contours with specific arc length
     real_cnts = []
 
     for cnt in contours:
         perimeter = cv2.arcLength(cnt, True)
         if perimeterMin < perimeter < perimeterMax:
-            # if cv2.isContourConvex(approx):
-            # if cv2.contourArea(cnt) < 300:
             real_cnts.append(cnt)
 
-    # comment the following if you want the full history
-    all_contours = [contours]
     contours_only = np.zeros(frame.shape)
     contoured = cv2.cvtColor(finalThresholdImage, cv2.COLOR_GRAY2RGB)
 
+    # Draw first 4 contours with different colors
     if len(contours) >= 1:
-        cv2.drawContours(contours_only, contours[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
+        cv2.drawContours(
+            contours_only, contours[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
     if len(contours) >= 2:
-        cv2.drawContours(contours_only, contours[1], -1, (0, 0, 255), thickness=5)     # blue = 2
+        cv2.drawContours(
+            contours_only, contours[1], -1, (0, 0, 255), thickness=5)     # blue = 2
     if len(contours) >= 3:
-        cv2.drawContours(contours_only, contours[2], -1, (0, 255, 0), thickness=5)     # green = 3
+        cv2.drawContours(
+            contours_only, contours[2], -1, (0, 255, 0), thickness=5)     # green = 3
     if len(contours) >= 4:
-        cv2.drawContours(contours_only, contours[3], -1, (255, 0, 0), thickness=5)     # red = 4
+        cv2.drawContours(
+            contours_only, contours[3], -1, (255, 0, 0), thickness=5)     # red = 4
 
     ''' --------------------/ Trajectory /------------------ '''
 
-    ''' The ball will be lagging the actual ball but that's fixable because the point we are drawing 
-     is the center of the contour, while the point we are drawing is the first point of the contour
-     '''
-
-    # the ball is detected
+    # The ball is detected
     if len(real_cnts) > 0:
-        # get center of current contour (whetehr it's a ball or human)
+        # Get center of first contour
         center_x, center_y = contours_center(real_cnts[0])
+
+        # Append it to the trajectories
         trajectories.append((center_x, center_y))
-        # just passing some frames
+
+        # Skip first 15 frames
         if len(trajectories) > 15:
+            # Calculate the distance between current point and last point
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
-            # find the distance betweeen them
             dist = find_length(diff_y, diff_x)
-            # print("The distance between the ball and the center of new is"+str(int(dist)))
+
+            # The current point is very far
             if dist > 60:
-                # the reading we got is not correct
+                # Remove it from the trajectories
                 trajectories.pop()
-                # we need to search the remaining contours
-                corrected_point, best_contour = find_nearest_contour(trajectories[-1], real_cnts, trajectories)
+
+                # Get the nearest contour
+                corrected_point, best_contour = find_nearest_contour(
+                    trajectories[-1], real_cnts, trajectories)
+
+                # Append the correct contour to the trajectories
                 trajectories.append(corrected_point)
-                center = contours_center(best_contour)
-                color_at_center = frame2[center[1], center[0]]
-                print(color_at_center)
-                # if color_at_center[1] > 128:
-                #     cv2.drawContours(frame, best_contour, -1, (0, 0, 255), thickness=5)  # red = 1
-                # else:
-                #     cv2.drawContours(frame, best_contour, -1, (0, 255, 255), thickness=5)  # yellow = 1
 
-
-
-            else:
-                center = contours_center(real_cnts[0])
-                color_at_center = frame2[center[1], center[0]]
-                print(color_at_center)
-                # if color_at_center[1] > 128:
-                #     cv2.drawContours(frame, real_cnts[0], -1, (0, 0, 255), thickness=5)  # red = 1
-                # else:
-                #     cv2.drawContours(frame, real_cnts[0], -1, (0, 255, 255), thickness=5)  # yellow = 1
+            # Update the game and draw trajectories
             m.updateGame(trajectories[-1])
             cv2.line(frame, trajectories[-1], trajectories[-2], (0, 0, 255), 5)
             cv2.line(frame, trajectories[-2], trajectories[-3], (0, 255, 0), 5)
+
+    # No contours are found in the current frame
     else:
-        # if there are no contours
         if len(trajectories) > 15:
-            last_direction = tuple(map(sub, trajectories[-1], trajectories[-2]))
-            last_direction = tuple(map(floordiv, last_direction, (2, 2)))
+            # Get the last direction of the ball
+            last_direction = tuple(
+                map(sub, trajectories[-1], trajectories[-2]))
+
+            # Add the last direction to the last point to continue in the same direction
             best_fit = tuple(map(add, trajectories[-1], last_direction))
+
+            # Append the new point to the trajectories
             trajectories.append(best_fit)
 
-    # cv2.imshow('Contour Detected on original', frame)
+    # Show the frame with the trajectory on it
+    cv2.imshow('Contour Detected on original', frame)
     # cv2.imshow('Contours only', contours_only)
-    cv2.imshow('th', differenceImage)
+    # cv2.imshow("Final Thresholded_image", cv2.bitwise_and(frame, frame, mask=finalThresholdImage))
+    # cv2.imshow('th', differenceImage)
     previous = grayImage.copy()
 
-    k = cv2.waitKey(45) & 0xff
+    k = cv2.waitKey(30) & 0xff
     if k == 27:
         break
-    elif k == ord('h'):
-        h_lower = int(input("Enter Lower Hue's Value \n"))
-        h_higher = int(input("Enter Upper Hue's Value \n"))
-    elif k == ord('v'):
-        v_lower = int(input("Enter Lower Value's Value \n"))
-        v_higher = int(input("Enter Lower Value's Value \n"))
-    elif k == ord('s'):
-        s_lower = int(input("Enter Lower Saturation's Value \n"))
-        s_higher = int(input("Enter Lower Saturation's Value \n"))
-    elif k == ord('p'):
-        x = input()
+
 
 cap.release()
 cv2.destroyAllWindows()
