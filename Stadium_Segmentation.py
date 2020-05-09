@@ -40,7 +40,21 @@ def draw_circles_of_points(c,image_to_be_displayed):
     return image_to_be_displayed
 
 
+def approx_to_points(c):
+    epsilon = 0.01 * cv2.arcLength(c, True)
+    approx = cv2.approxPolyDP(c, epsilon, True)
+    return approx
+
 def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
+
+    a = approx_to_points(c)
+
+    for p in a:
+        x,y = p.ravel()
+        cv2.circle(image_to_be_displayed,(x,y), 8, (255, 255, 255), -1)
+
+    print(len(a))
+
 
     points_corner=[]
 
@@ -49,7 +63,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
     fontScale              = 1
     fontColor              = (255,255,255)
     lineType               = 2
-    
+
     max_x=0
     y_max_x=0
 
@@ -70,7 +84,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
             y_max_x=y
         elif(x<min_x):
             min_x=x
-            y_min_x=y         
+            y_min_x=y
         if(y>max_y):
             max_y=y
             x_max_y=x
@@ -99,7 +113,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
     first_time_x=False
     count=1
     for point in c:
-        
+
         if count==4:
             break
         x,y=point.ravel()
@@ -116,7 +130,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
             #     fontColor,
             #     lineType
             #     )
-        
+
         elif(abs(x-prev_point[0]) >0.6*widht_of_rectangle and first_time_x):
             points_corner.append((x, y))
             count+=1
@@ -142,7 +156,7 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
             #     fontColor,
             #     lineType
             #     )
-                
+
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c,0.04 *peri, True)
     return points_corner,image_to_be_displayed
