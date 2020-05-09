@@ -24,8 +24,8 @@ def Crop_Image(event, x, y, flags, param):
 
 
 def Stadium_segment(image):
-    lower_stadium = np.array([100,80,90], dtype=np.uint8)
-    upper_stadium = np.array([140,150,185], dtype=np.uint8)
+    lower_stadium = np.array([99,40,30], dtype=np.uint8)
+    upper_stadium = np.array([120,255,255], dtype=np.uint8)
     # Threshold the HSV image to get only white colors
     mask = cv2.inRange(image, lower_stadium, upper_stadium)
     # Bitwise-AND mask and original image
@@ -82,17 +82,17 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
     height_of_rectangle=max_y-min_y
 
     #first point of hull is lower right?
-    cv2.circle(image_to_be_displayed, tuple(c[0][0]), 8, (255, 255, 255), -1)
+    #cv2.circle(image_to_be_displayed, tuple(c[0][0]), 8, (255, 255, 255), -1)
 
     points_corner.append(tuple(c[0][0]))
 
-    cv2.putText(image_to_be_displayed,'1', 
-                tuple(c[0][0]), 
-                font, 
-                fontScale,
-                fontColor,
-                lineType
-                )
+    # cv2.putText(image_to_be_displayed,'1',
+    #             tuple(c[0][0]),
+    #             font,
+    #             fontScale,
+    #             fontColor,
+    #             lineType
+    #             )
 
     prev_point=c[0][0]
 
@@ -107,41 +107,41 @@ def Bounding_Box_Of_Stadium(c,image_to_be_displayed):
             points_corner.append((x, y))
             count+=1
             first_time_x=True
-            cv2.circle(image_to_be_displayed, (x,y), 8, (0, 255, 0), -1)
+            #cv2.circle(image_to_be_displayed, (x,y), 8, (0, 255, 0), -1)
             prev_point = list((x,y))
-            cv2.putText(image_to_be_displayed,str(count), 
-                (x,y), 
-                font, 
-                fontScale,
-                fontColor,
-                lineType
-                )
+            # cv2.putText(image_to_be_displayed,str(count),
+            #     (x,y),
+            #     font,
+            #     fontScale,
+            #     fontColor,
+            #     lineType
+            #     )
         
         elif(abs(x-prev_point[0]) >0.6*widht_of_rectangle and first_time_x):
             points_corner.append((x, y))
             count+=1
-            cv2.circle(image_to_be_displayed, (x,y), 8, (255, 0, 0), -1)
+            #cv2.circle(image_to_be_displayed, (x,y), 8, (255, 0, 0), -1)
             prev_point = list((x,y))
-            cv2.putText(image_to_be_displayed,str(count), 
-                (x,y), 
-                font, 
-                fontScale,
-                fontColor,
-                lineType
-                )
+            # cv2.putText(image_to_be_displayed,str(count),
+            #     (x,y),
+            #     font,
+            #     fontScale,
+            #     fontColor,
+            #     lineType
+            #     )
 
         elif(abs(y-prev_point[1]) >0.4*height_of_rectangle):
             points_corner.append((x, y))
             count+=1
-            cv2.circle(image_to_be_displayed, (x,y), 8, (0, 0, 255), -1)
+            #cv2.circle(image_to_be_displayed, (x,y), 8, (0, 0, 255), -1)
             prev_point = list((x,y))
-            cv2.putText(image_to_be_displayed,str(count), 
-                (x,y), 
-                font, 
-                fontScale,
-                fontColor,
-                lineType
-                )    
+            # cv2.putText(image_to_be_displayed,str(count),
+            #     (x,y),
+            #     font,
+            #     fontScale,
+            #     fontColor,
+            #     lineType
+            #     )
                 
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c,0.04 *peri, True)
@@ -176,7 +176,7 @@ cv2.setMouseCallback('Original_First_Frame',Crop_Image)
 cap = cv2.VideoCapture('Edmonton.mp4')
 
 #read it
-clone = cv2.imread("Testing_Ball_HSV/x.jpg")
+clone = cv2.imread("Python Color Picking/x.jpg")
 #keep showing the image, so we can draw on it hehe.
 while(1):
     frame = clone.copy()
