@@ -18,7 +18,7 @@ will be able to score points to the competitors and flag a foul when applied.
 ## Features
 1. Ball detection
 2. Stadium Segmentation
-3. Scoring System
+3. Scoring
 4. Ini Configuration File
 5. Debugging Console
 
@@ -77,7 +77,14 @@ To track the ball, a pipeline of stages had to be done:
 ![Ball Contour](images/trajectories.png "Ball Contour")
 
 ## Stadium Segmentation
-
+First we let the user select an approximate area of the stadium then we loop for a number of
+frames to decrease the error just in case a player was hiding a part of the stadium or any other 
+error in this loop we save the resulted frames from masking using a color filter in a list then 
+we loop on this list to select the frame having the largest contour -having the largest
+contours indicates segmenting the stadium better-.
+At this point we've got the contours for the stadium, then we find the contours for the net and
+eventually we draw those contours on the video.
+[Stadium Segmentation Illustration](https://www.youtube.com/watch?v=hd54ugIYpQw&feature=youtu.be "Video")
 ## Scoring System
 Integration of Four Classes is responsible to monitor the game using the inputs from both the Ball Tracking and Stadium Segmentation.
 
