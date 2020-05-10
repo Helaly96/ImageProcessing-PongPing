@@ -26,7 +26,6 @@ will be able to score points to the competitors and flag a foul when applied.
 
 
 ## Development Environment & Dependencies 
-##Development Environment & Dependencies:
 In our development we used python language with some dependencies:
 * OpenCV: To process the video
 * PyQT: To make the GUI
