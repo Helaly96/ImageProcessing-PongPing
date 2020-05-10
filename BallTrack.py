@@ -63,7 +63,8 @@ def get_ball_coordinates(frame, previous, trajectories,points):
 
     # Calcuate the difference between current and last frame
     differenceImage = cv2.subtract(grayImage, previous)
-
+    #Cycle the frames
+    previous = grayImage.copy()
     # Blur the difference to remove noise
     blur = cv2.GaussianBlur(differenceImage, (5, 5), cv2.BORDER_DEFAULT)
 
@@ -127,11 +128,9 @@ def get_ball_coordinates(frame, previous, trajectories,points):
                 # Append the correct contour to the trajectories
                 trajectories.append(corrected_point)
 
-            # Draw trajectories
-            cv2.line(frame, trajectories[-1], trajectories[-2], (0, 0, 255), 5)
-            cv2.line(frame, trajectories[-2], trajectories[-3], (0, 255, 0), 5)
-
-        return trajectories[-1]
+            return trajectories[-1]
+        else:
+            return None
 
     # No contours are found in the current frame
     else:

@@ -8,9 +8,9 @@ class API():
         #class parameters
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
-        self.pts0 = np.array([0,0,0,0])
-        self.pts1 = np.array([0,0,0,0])
-        self.pts2 = np.array([0,0,0,0])
+        self.pts0 = np.array([(0,0),(0,0),(0,0),(0,0)])
+        self.pts1 = np.array([(0,0),(0,0),(0,0),(0,0)])
+        self.pts2 = np.array([(0,0),(0,0),(0,0),(0,0)])
         self.points = [[0, 0], [0, 0]]
 
         #filling the parameters
