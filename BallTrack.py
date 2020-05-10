@@ -55,8 +55,6 @@ def get_ball_coordinates(frame, previous, trajectories,points):
 
     # Parameters for the difference
     sensitivityValue = 60
-    # Crop frame
-    frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 
     # Convert to grayscale
     grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -111,7 +109,7 @@ def get_ball_coordinates(frame, previous, trajectories,points):
         trajectories.append((center_x, center_y))
 
         # Skip first 15 frames
-        if len(trajectories) > 15:
+        if len(trajectories) > 30:
             # Calculate the distance between current point and last point
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
@@ -128,7 +126,9 @@ def get_ball_coordinates(frame, previous, trajectories,points):
                 # Append the correct contour to the trajectories
                 trajectories.append(corrected_point)
 
-            return trajectories[-1]
+                return trajectories[-1]
+            else:
+                return None
         else:
             return None
 

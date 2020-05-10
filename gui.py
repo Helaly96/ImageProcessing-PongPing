@@ -98,6 +98,9 @@ class Ui(QtWidgets.QMainWindow):
             if frame is None:
                 break
 
+            # Crop frame
+            frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
+
             #Call Ball Track pass (the frame cropped?, previous, trajectories, differnces) recieve ballCoord
             ballCoord = BallTrack.get_ball_coordinates(frame, previous, trajectories, points)
             if ballCoord == None:
