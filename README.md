@@ -59,25 +59,41 @@ python gui.py
 ## Ball Tracking
 To track the ball, a pipeline of stages had to be done:
 1. Convert the image to grayscale
-![Alt text](images/gray.png "Gray")
+![Gray Image](images/gray.png "Gray Image")
 2. Subtract current frame from previous one
-![Alt text](images/diff.png "Gray")
-3. Blur the image witha gaussian blur
-![Alt text](images/blur1.png "Gray")
+![Difference Image](images/diff.png "Difference Image")
+3. Blur the image with a gaussian blur
+![Guassian Blur Image](images/blur1.png "Guassian Blur Image")
 4. Threshold the image
-![Alt text](images/threshold.png "Gray")
-5. Open the image
-![Alt text](images/open.png "Gray")
-6. Blur the image witha gaussian blur
-![Alt text](images/blur2.png "Gray")
+![Thresholded Image](images/threshold.png "Thresholded Image")
+5. Apply Opening on the image
+![Opened Image](images/open.png "Opened Image")
+6. Blur the image with a gaussian blur
+![Second Guassian Blur](images/blur2.png "Second Guassian Blur")
 7. Detect the contours
-![Alt text](images/contours.png "Gray")
+![Contours Detected](images/contours.png "Contours Detected")
 8. Sort and filter the contours
-![Alt text](images/real_contours.png "Gray")
+![Real Contours](images/real_contours.png "Real Contours")
 9. Select one of the contours to be the current trajectory
-![Alt text](images/trajectories.png "Gray")
+![Ball Contour](images/trajectories.png "Ball Contour")
+
 ## Stadium Segmentation
+
 ## Scoring System
+Integration of Four Classes is responsible to monitor the game using the inputs from both the Ball Tracking and Stadium Segmentation.
+
+### Class Ball
+Class responsible of tracking the ball position and direction throughout the game
+
+### Class tableObject
+Class responsible to create the polygon of either the stadium table or the net to be used in the calculations needed.
+
+### Class Player
+Class responsible to hold the players score, serve count, let allowance.
+
+### Class Match
+Class responsible to integrate between all the previous classes to monitor the matches and govern the main logic of the ping pong game.
+
 ## Ini Configuration
 ## Debuging Console
 
