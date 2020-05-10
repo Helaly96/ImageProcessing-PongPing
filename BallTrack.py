@@ -2,8 +2,11 @@ import numpy as np
 import cv2
 import math
 
+
 def find_length(diff_x, diff_y):
     return math.sqrt(diff_y ** 2 + diff_x ** 2)
+
+
 def contours_center(c):
     if c is not None:
         M = cv2.moments(c)
@@ -11,7 +14,9 @@ def contours_center(c):
         cY = int(M["m01"] / M["m00"])
         return cX, cY
     else:
-        return -1,-1
+        return -1, -1
+
+
 def find_nearest_contour(point, contours, trajectories):
     min = 100000
     index = 0
@@ -35,24 +40,25 @@ def find_nearest_contour(point, contours, trajectories):
     diff_x = best_fit[0] - point[0]
     diff_y = best_fit[1] - point[1]
     dist = find_length(diff_x, diff_y)
-    # print("the distance between the old point and the new approx is:" + str(int(dist)))
-    # return best_fit
+
     # the point we predicted is off
     if dist > 400:
-        print("wrong")
         return point, contours[i]
         # predict
         # last_direction = tuple(map(sub, trajectories[-1], trajectories[-2]))
         # last_direction = tuple(map(floordiv, last_direction, (2, 2)))
         # best_fit = tuple(map(add, point, last_direction))
     return best_fit, contours[i]
-def draw_on_screen(frame,pts0,pts1,pts2):
+
+
+def draw_on_screen(frame, pts0, pts1, pts2):
     # Draw boundaries
     cv2.polylines(frame, [pts0], True, (255, 255, 255))
     cv2.polylines(frame, [pts1], True, (255, 255, 255))
     cv2.polylines(frame, [pts2], True, (0, 255, 0))
-def get_ball_coordinates(frame, previous, trajectories,points):
 
+
+def get_ball_coordinates(frame, previous, trajectories, points):
     # Parameters for the difference
     sensitivityValue = 60
 
@@ -61,8 +67,13 @@ def get_ball_coordinates(frame, previous, trajectories,points):
 
     # Calcuate the difference between current and last frame
     differenceImage = cv2.subtract(grayImage, previous)
-    #Cycle the frames
+    # cv2.imshow('gray', grayImage)
+    # cv2.imshow('pre', previous)
+    # cv2.imshow('diff', differenceImage)
+
+    # Cycle the
     previous = grayImage.copy()
+
     # Blur the difference to remove noise
     blur = cv2.GaussianBlur(differenceImage, (5, 5), cv2.BORDER_DEFAULT)
 
@@ -81,14 +92,13 @@ def get_ball_coordinates(frame, previous, trajectories,points):
     # Contour Parameters
     perimeterMin = 25
     perimeterMax = 125
-    epsilon = 0.03
 
     # instead of getting a tree of contours (ie, each contour contain a child)
     # contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # we can get only top levels contours
     contours, hierarchy = cv2.findContours(finalThresholdImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Sort the contours with area
+    # Sort the contours by area
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
     # Select contours with specific arc length
@@ -98,6 +108,7 @@ def get_ball_coordinates(frame, previous, trajectories,points):
         perimeter = cv2.arcLength(cnt, True)
         if perimeterMin < perimeter < perimeterMax:
             real_cnts.append(cnt)
+
     ''' --------------------/ Trajectory /------------------ '''
 
     # The ball is detected
@@ -109,7 +120,7 @@ def get_ball_coordinates(frame, previous, trajectories,points):
         trajectories.append((center_x, center_y))
 
         # Skip first 15 frames
-        if len(trajectories) > 30:
+        if len(trajectories) > 15:
             # Calculate the distance between current point and last point
             diff_x = trajectories[-1][0] - trajectories[-2][0]
             diff_y = trajectories[-1][1] - trajectories[-2][1]
@@ -126,12 +137,10 @@ def get_ball_coordinates(frame, previous, trajectories,points):
                 # Append the correct contour to the trajectories
                 trajectories.append(corrected_point)
 
-                return trajectories[-1]
-            else:
-                return None
+            return trajectories[-1], previous
         else:
-            return None
+            return None, previous
 
     # No contours are found in the current frame
     else:
-        return None
+        return None, previous

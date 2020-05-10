@@ -35,7 +35,6 @@ class Ui(QtWidgets.QMainWindow):
         self.tableWidget.setItem(0, 0, QtWidgets.QTableWidgetItem(res[0]))
         self.tableWidget.setItem(0, 1, QtWidgets.QTableWidgetItem(res[1]))
 
-
     def upload_video(self):
         filename = QFileDialog.getOpenFileName(None, 'Open File', os.getenv('HOME'))
         if filename[0]:
@@ -58,14 +57,14 @@ class Ui(QtWidgets.QMainWindow):
         self.update_table(clear_list)
 
     def run(self, path):
-        #Create API Object
+        # Create API Object
         api = API()
-        #Capture the video from the path
+        # Capture the video from the path
         cap = cv2.VideoCapture(path)
         _, frame = cap.read()
 
-        #Get crop points from ini 
-        points = api.get_crop_points()  
+        # Get crop points from ini
+        points = api.get_crop_points()
 
         # Crop the frame
         frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
@@ -73,19 +72,19 @@ class Ui(QtWidgets.QMainWindow):
         grayImage = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         previous = grayImage.copy()
 
-
         # holds a record of previous ball positions
         trajectories = []
 
-        #Read the ini for the table and net boundaries 
+        # Read the ini for the table and net boundaries
         boundaryFirstPlayer, boundarySecondPlayer, boundaryNet = api.get_stadium_points()
-        
-        axisTranslation = [(points[0][1], points[0][0]), (points[0][1], points[0][0]), (points[0][1], points[0][0]), (points[0][1], points[0][0])]
 
-        boundaryFirstPlayer = [ (a[0]- b[0], a[1] - b[1]) for a, b in zip(boundaryFirstPlayer, axisTranslation) ]
-        boundarySecondPlayer = [ (a[0]- b[0], a[1] - b[1]) for a, b in zip(boundarySecondPlayer, axisTranslation) ]
-        boundaryNet = [ (a[0]- b[0], a[1] - b[1]) for a, b in zip(boundaryNet, axisTranslation) ]
-        
+        axisTranslation = [(points[0][1], points[0][0]), (points[0][1], points[0][0]), (points[0][1], points[0][0]),
+                           (points[0][1], points[0][0])]
+
+        boundaryFirstPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryFirstPlayer, axisTranslation)]
+        boundarySecondPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundarySecondPlayer, axisTranslation)]
+        boundaryNet = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryNet, axisTranslation)]
+
         # Construct the match
         m = Match()
         m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
@@ -94,51 +93,43 @@ class Ui(QtWidgets.QMainWindow):
         while True:
             # Read frame if end of file is reached break
             _, frame = cap.read()
-            
+
             if frame is None:
                 break
 
             # Crop frame
             frame = frame[points[0][1]:points[1][1], points[0][0]:points[1][0]]
 
-            #Call Ball Track pass (the frame cropped?, previous, trajectories, differnces) recieve ballCoord
-            ballCoord = BallTrack.get_ball_coordinates(frame, previous, trajectories, points)
-            if ballCoord == None:
-                continue
-            m.updateGame(ballCoord)
-            
+            # Call Ball Track pass (the frame cropped, previous cropped, trajectories, points) recieve ballCoord
+            ballCoord, previous = BallTrack.get_ball_coordinates(frame, previous, trajectories, points)
 
-            #Draw Trajectory
+            if ballCoord is not None:
+                m.updateGame(ballCoord)
+
+            # Draw Trajectory
             if len(trajectories) > 5:
                 cv2.line(frame, trajectories[-1], trajectories[-2], (0, 0, 255), 5)
                 cv2.line(frame, trajectories[-2], trajectories[-3], (0, 255, 0), 5)
-            
-            #Draw The Stadium
 
-            #UpdateScore
+            # Draw The Stadium
+
+            # UpdateScore
             res = [(m.players[0]).getScore(), (m.players[1]).getScore()]
             self.update_table(res)
 
-            #Show the frame
+            # Show the frame
             cv2.imshow('Match', frame)
 
-            #Wait Key
+            # Wait Key
             k = cv2.waitKey(30) & 0xff
             if k == 27:
                 break
 
-        
-        #Message End of Match
+        # Message End of Match
         cap.release()
         cv2.destroyAllWindows()
-
-
-
 
 
 app = QtWidgets.QApplication(sys.argv)
 window = Ui()
 app.exec_()
-
-
-
