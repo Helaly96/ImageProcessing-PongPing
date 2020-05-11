@@ -9,6 +9,7 @@ import configparser
 import cv2
 from ini_api import API
 import BallTrack
+import numpy as np
 
 IMAGE_WIDTH = 1230
 IMAGE_HEIGHT = 390
@@ -79,13 +80,6 @@ class Ui(QtWidgets.QMainWindow):
         cap = cv2.VideoCapture(path)
         _, frame = cap.read()
 
-        # if ret:
-        #     # Show the frame
-        #     height, width, channel = frame.shape
-        #     bytesPerLine = 3 * width
-        #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        #     qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        #     l = self.label_4.setPixmap(QPixmap.fromImage(qImg).scaled(IMAGE_WIDTH, IMAGE_HEIGHT, Qt.KeepAspectRatio))
         # Get crop points from ini
         points = api.get_crop_points()
 
@@ -107,7 +101,7 @@ class Ui(QtWidgets.QMainWindow):
         boundaryFirstPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryFirstPlayer, axisTranslation)]
         boundarySecondPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundarySecondPlayer, axisTranslation)]
         boundaryNet = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryNet, axisTranslation)]
-
+        
         # Construct the match
         m = Match()
         m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
@@ -136,6 +130,12 @@ class Ui(QtWidgets.QMainWindow):
                 cv2.line(frame, trajectories[-2], trajectories[-3], (0, 255, 0), 5)
 
             # Draw The Stadium
+            Contour = np.array(boundaryFirstPlayer)
+            cv2.drawContours(frame, [Contour], 0, (0,255,255), 2)
+            Contour = np.array(boundarySecondPlayer)
+            cv2.drawContours(frame, [Contour], 0, (0,255,255), 2)
+            Contour = np.array(boundaryNet)
+            cv2.drawContours(frame, [Contour], 0, (255,255,255), 2)
 
             # UpdateScore
             res = [(m.players[0]).getScore(), (m.players[1]).getScore()]

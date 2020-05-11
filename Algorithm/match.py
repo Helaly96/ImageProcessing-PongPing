@@ -4,7 +4,7 @@ from .tableObject import tableObject
 
 
 class Match:
-    # Flags
+    # --------------- Flags ---------------------------
     # Collided with a wall or net
     collidedHorizontally = 0
 
@@ -25,7 +25,7 @@ class Match:
 
     # Functions
 
-    # Constructor to add two players in player list
+    # Constructor to add two players in player list, and add three Table objects
     def __init__(self):
         (self.players).append(Player())
         (self.players).append(Player())
@@ -35,50 +35,47 @@ class Match:
 
     def defineTable(self, boundary0, boundary1, boundaryNet):
         # The input is three lists of the regions of the table
-        # The table is created
+        # The table is created, the two table pieces and the net
         ((self.tableObjects)[0]).createRegion(boundary0)
         ((self.tableObjects)[1]).createRegion(boundary1)
         ((self.tableObjects)[2]).createRegion(boundaryNet)
 
-    # If the ball is out of scope for a certain number of frames could be determined from the ball speed
-    # The point is given and serve is closed to start a new serve
-
+    #Switch the players turns
     def switchTurn(self):
         self.turn = (self.turn + 1) % 2
         (self.players[self.turn]).takeServe()
-        print("Turn Switched")
 
+    #Start the Scoring
     def startMatch(self):
         (self.players)[self.turn].takeServe()
 
     def didBallHit(self):
+        #Checks if it hits home, the side near to the player shooting 
         point = (self.ball).previousBall()
         ballCollided = ((self.ball).didCollide() == self.collidedVertically)
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite) % 2]).inRegion(point)
         if (ballCollided) and ballInRegion:
-            print("Hit Home")
             return True
         else:
             return False
 
     def switchOpposite(self):
-        print("waiting to hit switched")
         self.waitOpposite = (self.waitOpposite + 1) % 2
 
     def didBallHitOpposite(self):
+        #Checks if it hits away, the side far to the player shooting 
         point = (self.ball).previousBall()
         ballCollided = ((self.ball).didCollide() == self.collidedVertically)
         ballInRegion = ((self.tableObjects)[(self.turn + self.waitOpposite + 1) % 2]).inRegion(point)
         if (ballCollided) and ballInRegion:
-            print("Hit Away")
             return True
         else:
             return False
 
     def didBallHitNet(self, point):
+        #Checks if the ball hit the net
         ballInRegion = ((self.tableObjects)[2]).inRegion(point)
         if ballInRegion:
-            print("Hit the net")
             return True
         else:
             return False
@@ -90,6 +87,8 @@ class Match:
         oppositePlayer = (self.players)[
             (self.turn + self.waitOpposite + 1) % 2]
         if currentPlayer.isFirstHit():
+            #Indicating the first hit in the serve, it should bounce on both sides any other is taken as a point for the opposite player 
+            #First Net Hit is a Let and the serve is restarted, Second Net Hit is foul and a point is scored
             if self.didBallHit():
                 currentPlayer.doneFirstHit()
                 return
@@ -114,7 +113,7 @@ class Match:
 
                 return
         else:
-
+            #Indicating the ball is in a rally it should hit the opposite side only, net hits are allowed as long as it hits the right side afterwards 
             if self.didBallHit():
                 oppositePlayer.addPoint()
                 currentPlayer.finishServe()
@@ -132,6 +131,7 @@ class Match:
                 return
 
     def printInfo(self):
+        #Used to communicate with the GUI
         point = self.ball.previousBall()
         if self.didBallHit():
             return "Hit Home"
