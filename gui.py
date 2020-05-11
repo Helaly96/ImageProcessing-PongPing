@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Algorithm.match import Match
+from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
 import configparser
 import cv2
 from ini_api import API
@@ -21,7 +22,7 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         uic.loadUi('pongping.ui', self)
 
-        self.uploadbutton.clicked.connect(self.upload_video)
+        self.uploadbutton.clicked.connect(self.run)
         self.opencamerabutton.clicked.connect(self.open_camera)
         self.restartbutton.clicked.connect(self.restart)
         self.comboBox.currentIndexChanged.connect(self.on_combobox_changed)
@@ -29,6 +30,14 @@ class Ui(QtWidgets.QMainWindow):
 
         self.uploadbutton.setEnabled(True)
         self.opencamerabutton.setEnabled(False)
+
+        # video stream
+        self.label2 = QtWidgets.QLabel(self.centralwidget)
+        self.label2.setGeometry(QtCore.QRect(10, 0, 1230, 390))
+        self.label2.setText("")
+        self.label2.setObjectName("label")
+
+
         self.show()
 
     def update_table(self, res):
@@ -39,7 +48,7 @@ class Ui(QtWidgets.QMainWindow):
         filename = QFileDialog.getOpenFileName(None, 'Open File', os.getenv('HOME'))
         if filename[0]:
             print(filename[0])
-            self.run(filename[0])
+            self.run()
 
     def open_camera(self):
         pass
@@ -56,11 +65,12 @@ class Ui(QtWidgets.QMainWindow):
         clear_list = ["", "", "", ""]
         self.update_table(clear_list)
 
-    def run(self, path):
+    def run(self):
+        print("!!")
         # Create API Object
         api = API()
         # Capture the video from the path
-        cap = cv2.VideoCapture(path)
+        cap = cv2.VideoCapture("Edmonton.mp4")
         _, frame = cap.read()
 
         # Get crop points from ini
@@ -116,9 +126,9 @@ class Ui(QtWidgets.QMainWindow):
             # UpdateScore
             res = [(m.players[0]).getScore(), (m.players[1]).getScore()]
             self.update_table(res)
-
-            # Show the frame
-            cv2.imshow('Match', frame)
+            frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+            image = QImage(frame.data, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
+            self.label2.setPixmap(QPixmap.fromImage(image).scaled(1230, 390, Qt.KeepAspectRatio))
 
             # Wait Key
             k = cv2.waitKey(30) & 0xff
