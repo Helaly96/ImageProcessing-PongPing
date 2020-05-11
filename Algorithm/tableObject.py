@@ -17,6 +17,7 @@ class tableObject:
     def inRegion(self, testedPoint):
         #Input: tuple indicating coordinates (x,y)
         #Output: Boolean, Is the point in the region?
+        #Function: Use Shapely to see if the ball intrsects with the table object
         
         #Create ball bounding square
         ballRadius = 12

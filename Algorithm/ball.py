@@ -30,6 +30,7 @@ class Ball:
 
     #Functions
     def didCollide(self):
+        #Did the ball collide, did it change directions and in which direction, using vectors and elastic collision theory
         previousDirection = self.directionHistory[-1]
         beforePreviousDirection = self.directionHistory[-2]
 
@@ -37,13 +38,13 @@ class Ball:
         #Ax / Bx = Ay / By or Ax By = Bx Ay
         if (previousDirection[0] * beforePreviousDirection[0]) > 0:
             if (previousDirection[1] * beforePreviousDirection[1]) > 0:
-                #print("Ball is in the same direction")
+                #"Ball is in the same direction"
                 return self.didntCollide
             else :
-                #print("Ball switched direction vertically" + str(random()))
+                #"Ball switched direction vertically"
                 return self.collidedVertically 
         else :
-            #print("Ball switched direction horizontally")
+            #"Ball switched direction horizontally"
             return self.collidedHorizontally
         
 
@@ -51,17 +52,18 @@ class Ball:
         #Update the ball position
         self.position = point
         
-        #Update the ball history, and pop the eldest point
+        #Update the ball history, and pop the eldest point, work as a fixed size Queue
         self.positionHistory.append(point)
         self.positionHistory.pop(0)
         
-        #Update the ball vector
+        #Update the ball vector, Calculate direction vector by taking the difference of the positions
         self.direction = tuple(map(sub, (self.positionHistory[-1]), (self.positionHistory[-2])))
 
         #Update the direction history, and pop the elder direction
         self.directionHistory.append(self.direction)
         self.directionHistory.pop(0)
                  
+    #Returns the ball last position before the current one
     def previousBall(self):
         return self.positionHistory[-2]
 

@@ -1,3 +1,5 @@
+## This file is considered a pseudocode used to guide us in integrating the scoring system with other functions.
+
 from match import Match
 
 # Get the boundary values from the stadium segmentation code
