@@ -2,30 +2,30 @@ from .ball import Ball
 from .player import Player
 from .tableObject import tableObject
 
+
 class Match:
-    #Flags
-    #Collided with a wall or net
+    # Flags
+    # Collided with a wall or net
     collidedHorizontally = 0
 
-    #Collided with table or floor
+    # Collided with table or floor
     collidedVertically = 1
 
-    #moving in the same direction
+    # moving in the same direction
     didntCollide = 2
 
-
-    #Attribute
+    # Attribute
     turn = 0
     waitOpposite = 0
 
-    #Objects
+    # Objects
     ball = Ball()
     players = []
     tableObjects = []
 
-    #Functions
+    # Functions
 
-    #Constructor to add two players in player list
+    # Constructor to add two players in player list
     def __init__(self):
         (self.players).append(Player())
         (self.players).append(Player())
@@ -33,25 +33,24 @@ class Match:
         (self.tableObjects).append(tableObject())
         (self.tableObjects).append(tableObject())
 
-    def defineTable(self, boundary0, boundary1, boundaryNet ):
-        #The input is three lists of the regions of the table
-        #The table is created
+    def defineTable(self, boundary0, boundary1, boundaryNet):
+        # The input is three lists of the regions of the table
+        # The table is created
         ((self.tableObjects)[0]).createRegion(boundary0)
         ((self.tableObjects)[1]).createRegion(boundary1)
         ((self.tableObjects)[2]).createRegion(boundaryNet)
 
-#If the ball is out of scope for a certain number of frames could be determined from the ball speed 
-#The point is given and serve is closed to start a new serve 
-                
-    
+    # If the ball is out of scope for a certain number of frames could be determined from the ball speed
+    # The point is given and serve is closed to start a new serve
+
     def switchTurn(self):
-        self.turn = (self.turn + 1)%2
+        self.turn = (self.turn + 1) % 2
         (self.players[self.turn]).takeServe()
         print("Turn Switched")
 
     def startMatch(self):
         (self.players)[self.turn].takeServe()
-     
+
     def didBallHit(self):
         point = (self.ball).previousBall()
         ballCollided = ((self.ball).didCollide() == self.collidedVertically)
@@ -59,12 +58,12 @@ class Match:
         if (ballCollided) and ballInRegion:
             print("Hit Home")
             return True
-        else :
+        else:
             return False
 
     def switchOpposite(self):
         print("waiting to hit switched")
-        self.waitOpposite = (self.waitOpposite + 1)%2
+        self.waitOpposite = (self.waitOpposite + 1) % 2
 
     def didBallHitOpposite(self):
         point = (self.ball).previousBall()
@@ -73,7 +72,7 @@ class Match:
         if (ballCollided) and ballInRegion:
             print("Hit Away")
             return True
-        else :
+        else:
             return False
 
     def didBallHitNet(self, point):
@@ -81,11 +80,11 @@ class Match:
         if ballInRegion:
             print("Hit the net")
             return True
-        else :
+        else:
             return False
 
     def updateGame(self, point):
-        #This should have the main logic of the game
+        # This should have the main logic of the game
         (self.ball).updateBall(point)
         currentPlayer = (self.players)[(self.turn + self.waitOpposite) % 2]
         oppositePlayer = (self.players)[
@@ -109,7 +108,7 @@ class Match:
                 currentPlayer.finishServe()
 
                 if currentPlayer.didFinishServes():
-                        self.switchTurn()
+                    self.switchTurn()
                 else:
                     currentPlayer.takeServe()
 
@@ -133,7 +132,10 @@ class Match:
                 return
 
     def printInfo(self):
-        print("Player 0 score:" + str(self.players[0].getScore()) + " Player 1 score:" + str(self.players[1].getScore())  + "\n")
-        print("Player " + str(self.turn) + "turn\n")
-        print("Player " + str(self.waitOpposite) + "hit\n")
-        return
+        point = self.ball.previousBall()
+        if self.didBallHit():
+            return "Hit Home"
+        elif self.didBallHitOpposite():
+            return "Hit Away"
+        elif self.didBallHitNet(point):
+            return "Hit the net"

@@ -1,16 +1,18 @@
 import os
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5 import QtWidgets, QtCore, uic
+from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Algorithm.match import Match
-from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
 import configparser
 import cv2
 from ini_api import API
 import BallTrack
 
-result = dict()
+IMAGE_WIDTH = 1230
+IMAGE_HEIGHT = 390
+WAITING_TIME_BETWEEN_FRAMES_IN_MS=30
 
 
 def close_program():
@@ -18,11 +20,13 @@ def close_program():
 
 
 class Ui(QtWidgets.QMainWindow):
+
     def __init__(self):
+        self.timer_count = 0
         super(Ui, self).__init__()
         uic.loadUi('pongping.ui', self)
 
-        self.uploadbutton.clicked.connect(self.run)
+        self.uploadbutton.clicked.connect(self.upload_video)
         self.opencamerabutton.clicked.connect(self.open_camera)
         self.restartbutton.clicked.connect(self.restart)
         self.comboBox.currentIndexChanged.connect(self.on_combobox_changed)
@@ -30,25 +34,25 @@ class Ui(QtWidgets.QMainWindow):
 
         self.uploadbutton.setEnabled(True)
         self.opencamerabutton.setEnabled(False)
-
-        # video stream
-        self.label2 = QtWidgets.QLabel(self.centralwidget)
-        self.label2.setGeometry(QtCore.QRect(10, 0, 1230, 390))
-        self.label2.setText("")
-        self.label2.setObjectName("label")
-
-
         self.show()
 
     def update_table(self, res):
-        self.tableWidget.setItem(0, 0, QtWidgets.QTableWidgetItem(res[0]))
-        self.tableWidget.setItem(0, 1, QtWidgets.QTableWidgetItem(res[1]))
+        self.tableWidget.setItem(0, 0, QtWidgets.QTableWidgetItem(str(res[0])))
+        self.tableWidget.setItem(0, 1, QtWidgets.QTableWidgetItem(str(res[1])))
+
+    def append_event(self, value):
+        rowcount = self.tableWidget_2.rowCount()
+        if value:
+            self.tableWidget_2.insertRow(rowcount)
+            self.tableWidget_2.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(value))
+            self.tableWidget_2.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(
+                str(int(self.timer_count / WAITING_TIME_BETWEEN_FRAMES_IN_MS))))
 
     def upload_video(self):
+        self.restart()
         filename = QFileDialog.getOpenFileName(None, 'Open File', os.getenv('HOME'))
         if filename[0]:
-            print(filename[0])
-            self.run()
+            self.run(filename[0])
 
     def open_camera(self):
         pass
@@ -64,15 +68,24 @@ class Ui(QtWidgets.QMainWindow):
     def restart(self):
         clear_list = ["", "", "", ""]
         self.update_table(clear_list)
+        self.tableWidget_2.setRowCount(0)
 
-    def run(self):
-        print("!!")
+    def run(self, path):
+        self.timer_count = 0
+
         # Create API Object
         api = API()
         # Capture the video from the path
-        cap = cv2.VideoCapture("Edmonton.mp4")
+        cap = cv2.VideoCapture(path)
         _, frame = cap.read()
 
+        # if ret:
+        #     # Show the frame
+        #     height, width, channel = frame.shape
+        #     bytesPerLine = 3 * width
+        #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #     qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        #     l = self.label_4.setPixmap(QPixmap.fromImage(qImg).scaled(IMAGE_WIDTH, IMAGE_HEIGHT, Qt.KeepAspectRatio))
         # Get crop points from ini
         points = api.get_crop_points()
 
@@ -101,6 +114,7 @@ class Ui(QtWidgets.QMainWindow):
         m.startMatch()
 
         while True:
+            self.timer_count += 1
             # Read frame if end of file is reached break
             _, frame = cap.read()
 
@@ -125,21 +139,21 @@ class Ui(QtWidgets.QMainWindow):
 
             # UpdateScore
             res = [(m.players[0]).getScore(), (m.players[1]).getScore()]
+
             self.update_table(res)
-            frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-            image = QImage(frame.data, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
-            self.label2.setPixmap(QPixmap.fromImage(image).scaled(1230, 390, Qt.KeepAspectRatio))
+            self.append_event(m.printInfo())
 
-            # Wait Key
-            k = cv2.waitKey(30) & 0xff
-            if k == 27:
-                break
+            # Show the frame
+            height, width, channel = frame.shape
+            bytesPerLine = 3 * width
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
-        # Message End of Match
-        cap.release()
-        cv2.destroyAllWindows()
+            self.label_4.setPixmap(QPixmap.fromImage(qImg).scaled(IMAGE_WIDTH, IMAGE_HEIGHT, Qt.KeepAspectRatio))
+            QApplication.processEvents()
 
 
-app = QtWidgets.QApplication(sys.argv)
-window = Ui()
-app.exec_()
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = Ui()
+    app.exec_()

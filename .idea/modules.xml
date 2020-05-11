@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ImageProcessing.iml" filepath="$PROJECT_DIR$/.idea/ImageProcessing.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../OpticalFlowApproach/.idea/OpticalFlowApproach.iml" filepath="$PROJECT_DIR$/../OpticalFlowApproach/.idea/OpticalFlowApproach.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/ImageProcessing-PongPing.iml" filepath="$PROJECT_DIR$/.idea/ImageProcessing-PongPing.iml" />
     </modules>
   </component>
 </project>
