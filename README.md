@@ -102,14 +102,36 @@ Class responsible to hold the players score, serve count, let allowance.
 Class responsible to integrate between all the previous classes to monitor the matches and govern the main logic of the ping pong game.
 
 ## Ini Configuration
+it serves as the connection between all the helper funcutions and the main gui code, for example, the stadium segmentation outputs the stadium points and the net, and it's saved in this configuration file.
+so simple the gui files check if these points are there, so it doesn't need to re-run the same fun. and proceeds with main algorithm.
+
+in order read from the .ini files, we defined an API class for the gui to use it.
+
 ## Debuging Console
 
 ## Previous Development Approaches
-1. [Trajectory & Kalmann filter]()
-2. [Search for white contours in contours list]()
-3. [Tweaking Video parameters]()
-4. [Coloring the ball]()
 
+1. [Optical Flow Approach](https://github.com/Helaly96/ImageProcessing-PongPing/blob/Prediction/OpticalFlow-Algo/OptialFlow.py)
+
+  We tried to use the [Lucas Kanade](https://docs.opencv.org/master/db/d7f/tutorial_js_lucas_kanade.html) Algorithm to detect the ball in the beginning, we tried it on a raw video and it gave the resullt you  can check [Here](https://www.youtube.com/watch?v=LkEs04UhJJ4), and it was sensitive to noise so we naturally filtered out the video and was able to make the optical flow algorithm detect the ball, but again if the ball was out sight or just simply fast enough to skip the windows the algorithm searches in , we won't be able to get it again. so that's we we didn't choose that algorithm
+  
+2. [Blob Detection](https://github.com/Helaly96/ImageProcessing-PongPing/blob/Prediction/Algorithms-Tryout/Blob-Detection.py)
+
+after we decided to filter out the ball using color ; we would be left with white spots where the ball is true, so naturally we decided to build on the simple color detection and using [BlobDetection](https://www.learnopencv.com/blob-detection-using-opencv-python-c/) we would then filter out circular shapes, but came few problems when trying this algorithm, first problem was that the ball isn't always exactly spherical when shot with high speed so there goes the convexity filteration and secound of all that the ball isn't consistenly white, different lightning affects the ball HSV values, so that's we didn't settle on using it.
+
+3. [Motion Detection using MOG2]()
+
+Before settling on using subtract or absdifferece , we started using MOG2 and MOG, it performed better in some videos , worse in others.
+you can see the result of MOG2 [here](https://www.youtube.com/watch?v=QXrxQLreJkg).
+so we saw potiential in it and that lead to the very first pipeline we [used](https://github.com/Helaly96/ImageProcessing-PongPing/tree/52eca968f5a8e866f52dee231ba23c63a89c0db5) which basically depended on us finding all moving objects with MOG2 and then following that with white color detection using hsv and following by some contour constrains (length and area) and for a result from this approach you can check this [video](https://youtu.be/zDyQDUTYPz0)
+but we didn't use it in the end, MOG2 was also extremely sensitive to noise, and we couldn't debug in it because it was kinda a black box so we googled on how it operates and found this amazing [answer](https://stackoverflow.com/questions/52578621/best-opencv-algorithm-for-detecting-fast-moving-ball) on stackoverflow that kickstarted the journey with absdiff and subtract
+
+4. [Color of area enclosed in contours]()
+
+
+## How can this be extended
+
+well, this serves as a demo for a school project, so of course it's not perfect and there is always room for improvement.. one of them is using kalman fiters to predict the ball's position, we studied this approach mathematically but we didn't come to implementing it, which would significally improve the results.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
