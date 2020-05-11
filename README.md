@@ -34,19 +34,19 @@ In our development we used python language with some dependencies:
 
 PongPing built with some magic python libraries, so before start using PingPong run the following command
 
-### Cloning
+### Installation of dependencies
 
 ```bash
-git clone https://github.com/Helaly96/ImageProcessing-PongPing.git
-git cd /ImageProcessing-PongPing
+pip install opencv-python pyqt5 puqt5-tools numpy shapely
 ```
 
 
-### Installation of dependencies
+### Cloning
 
 After install the dependancies, next step is cloning PongPing.
 ```bash
-pip install opencv-python pyqt5 puqt5-tools numpy shapely
+git clone https://github.com/Helaly96/ImageProcessing-PongPing.git
+git cd /ImageProcessing-PongPing
 ```
 
 ### Usage
