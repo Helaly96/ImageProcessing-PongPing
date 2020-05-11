@@ -150,6 +150,9 @@ class Ui(QtWidgets.QMainWindow):
             qImg = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
             self.label_4.setPixmap(QPixmap.fromImage(qImg).scaled(IMAGE_WIDTH, IMAGE_HEIGHT, Qt.KeepAspectRatio))
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
             QApplication.processEvents()
 
 
