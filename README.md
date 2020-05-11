@@ -59,23 +59,23 @@ python gui.py
 ## Ball Tracking
 To track the ball, a pipeline of stages had to be done:
 1. Convert the image to grayscale
-![Gray Image](images/gray.png "Gray Image")
-2. Subtract current frame from previous one
-![Difference Image](images/diff.png "Difference Image")
+![Gray Image](Documentation-Images/gray.png "Gray Image")
+2. Subtract current Documentation-Images from previous one
+![Difference Image](Documentation-Images/diff.png "Difference Image")
 3. Blur the image with a gaussian blur
-![Guassian Blur Image](images/blur1.png "Guassian Blur Image")
+![Guassian Blur Image](Documentation-Images/blur1.png "Guassian Blur Image")
 4. Threshold the image
-![Thresholded Image](images/threshold.png "Thresholded Image")
+![Thresholded Image](Documentation-Images/threshold.png "Thresholded Image")
 5. Apply Opening on the image
-![Opened Image](images/open.png "Opened Image")
+![Opened Image](Documentation-Images/open.png "Opened Image")
 6. Blur the image with a gaussian blur
-![Second Guassian Blur](images/blur2.png "Second Guassian Blur")
+![Second Guassian Blur](Documentation-Images/blur2.png "Second Guassian Blur")
 7. Detect the contours
-![Contours Detected](images/contours.png "Contours Detected")
+![Contours Detected](Documentation-Images/contours.png "Contours Detected")
 8. Sort and filter the contours
-![Real Contours](images/real_contours.png "Real Contours")
+![Real Contours](Documentation-Images/real_contours.png "Real Contours")
 9. Select one of the contours to be the current trajectory
-![Ball Contour](images/trajectories.png "Ball Contour")
+![Ball Contour](Documentation-Images/trajectories.png "Ball Contour")
 
 ## Stadium Segmentation
 First we let the user select an approximate area of the stadium then we loop for a number of
