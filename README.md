@@ -26,6 +26,7 @@ will be able to score points to the competitors and flag a foul when applied.
 ## Demo
 
 Click on the following image to see a quick over view:
+
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/I-xBTqmLxSA/0.jpg)](https://www.youtube.com/watch?v=I-xBTqmLxSA)
 
 ## Development Environment & Dependencies 
