@@ -15,7 +15,6 @@ class Player:
         #Resets the attributes each time this player starts a serve
         self.let = True
         self.firstHit = True
-        self.servesPlayedCounter = 0
 
     def doneFirstHit(self):
         firstHit = False
@@ -25,6 +24,7 @@ class Player:
     
     def didFinishServes(self):
         if self.servesPlayedCounter == 2:
+            self.servesPlayedCounter = 0
             return True
         else :
             return False

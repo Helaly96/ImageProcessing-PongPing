@@ -86,6 +86,8 @@ contours indicates segmenting the stadium better-.
 At this point we've got the contours for the stadium, then we find the contours for the net and
 eventually we draw those contours on the video.
 [Stadium Segmentation Illustration](https://www.youtube.com/watch?v=hd54ugIYpQw&feature=youtu.be "Video")
+![Stadium after segmentation](Documentation-Images/11.png "Stadium after segmentation")
+
 ## Scoring System
 Integration of Four Classes is responsible to monitor the game using the inputs from both the Ball Tracking and Stadium Segmentation.
 
