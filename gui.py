@@ -1,11 +1,10 @@
 import os
 import sys
-from PyQt5 import QtWidgets, QtCore, uic
-from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Algorithm.match import Match
-import configparser
 import cv2
 from ini_api import API
 import BallTrack
@@ -16,6 +15,11 @@ IMAGE_HEIGHT = 390
 WAITING_TIME_BETWEEN_FRAMES_IN_MS=30
 
 
+def resource_path(relative_path):
+    base_path = os.getcwd()
+    print(base_path)
+    return os.path.join(base_path, relative_path)
+
 def close_program():
     sys.exit()
 
@@ -25,7 +29,7 @@ class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         self.timer_count = 0
         super(Ui, self).__init__()
-        uic.loadUi('pongping.ui', self)
+        uic.loadUi(resource_path('pongping.ui'), self)
 
         self.uploadbutton.clicked.connect(self.upload_video)
         self.opencamerabutton.clicked.connect(self.open_camera)
@@ -66,11 +70,6 @@ class Ui(QtWidgets.QMainWindow):
             self.uploadbutton.setEnabled(True)
             self.opencamerabutton.setEnabled(False)
 
-    def restart(self):
-        clear_list = ["", "", "", ""]
-        self.update_table(clear_list)
-        self.tableWidget_2.setRowCount(0)
-
     def run(self, path):
         self.timer_count = 0
 
@@ -101,7 +100,7 @@ class Ui(QtWidgets.QMainWindow):
         boundaryFirstPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryFirstPlayer, axisTranslation)]
         boundarySecondPlayer = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundarySecondPlayer, axisTranslation)]
         boundaryNet = [(a[0] - b[0], a[1] - b[1]) for a, b in zip(boundaryNet, axisTranslation)]
-        
+
         # Construct the match
         m = Match()
         m.defineTable(boundaryFirstPlayer, boundarySecondPlayer, boundaryNet)
@@ -154,6 +153,12 @@ class Ui(QtWidgets.QMainWindow):
             if k == 27:
                 break
             QApplication.processEvents()
+
+
+    def restart(self):
+        clear_list = ["", "", "", ""]
+        self.update_table(clear_list)
+        self.tableWidget_2.setRowCount(0)
 
 
 if __name__ == "__main__":
