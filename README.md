@@ -4,6 +4,8 @@
 *Delivery Note : For a full list of commits and timeline, please check Prediction Branch*
 
 ## Description
+[![IMAGE ALT TEXT HERE](https://i.imgur.com/VVHHNOZ.png)]()
+
 PongPing is a table tennis scoring system through image processing the live video of the match, where the system
 will be able to score points to the competitors and flag a foul when applied.
 
